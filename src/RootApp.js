@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "./core/function-component.js";
 import { h } from "./core/vdom.js";
 import { StopwatchCard } from "./components/StopwatchCard.js";
+import { ThemeToggle } from "./components/ThemeToggle.js";
 
 export function RootApp() {
   const [theme, setTheme] = useState(() => {
@@ -108,32 +109,7 @@ export function RootApp() {
     h(
       "div",
       { className: "page-toolbar" },
-      h(
-        "button",
-        {
-          className: `theme-toggle ${theme === "light" ? "light" : "dark"}`,
-          type: "button",
-          "aria-label": `${theme === "dark" ? "라이트" : "다크"} 모드로 전환`,
-          "aria-pressed": theme === "light" ? "true" : "false",
-          onClick: handleThemeToggle,
-        },
-        h("span", { className: "theme-toggle-track" }),
-        h(
-          "span",
-          { className: "theme-toggle-thumb", "aria-hidden": "true" },
-          theme === "light" ? "☀" : "☾",
-        ),
-        h(
-          "span",
-          { className: "theme-toggle-label theme-toggle-label-light" },
-          "Light",
-        ),
-        h(
-          "span",
-          { className: "theme-toggle-label theme-toggle-label-dark" },
-          "Dark",
-        ),
-      ),
+      ThemeToggle({ theme, onToggle: handleThemeToggle }),
     ),
     StopwatchCard({
       running,

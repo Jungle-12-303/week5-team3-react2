@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>컴포넌트 구현 시각화 문서</title>
+    <style>
+      :root {
+        --bg: #050608;
+        --panel: rgba(14, 16, 20, 0.88);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #f5f7fb;
+        --muted: #9ea7b7;
+        --accent: #ff735c;
+        --blue: #6d87ff;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 40px 20px 96px;
+        color: var(--text);
+        font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(255, 115, 92, 0.14), transparent 26%),
+          radial-gradient(circle at 20% 20%, rgba(109, 135, 255, 0.1), transparent 22%),
+          linear-gradient(180deg, #090b10, var(--bg));
+      }
+
+      main {
+        width: min(1280px, 100%);
+        margin: 0 auto;
+      }
+
+      .hero { margin-bottom: 28px; }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        line-height: 1.05;
+      }
+
+      .hero p {
+        max-width: 920px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+      }
+
+      .grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .subgrid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        font-size: 1.2rem;
+      }
+
+      pre.mermaid {
+        margin: 0;
+        overflow: auto;
+      }
+
+      .notes {
+        margin-top: 14px;
+        color: var(--muted);
+        line-height: 1.72;
+        font-size: 0.96rem;
+      }
+
+      .notes p { margin: 0 0 10px; }
+      .notes ul { margin: 0; padding-left: 18px; }
+
+      .quote {
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: rgba(18, 20, 25, 0.96);
+        border: 1px solid var(--border);
+        color: var(--text);
+        line-height: 1.75;
+      }
+
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+    </style>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          background: "#0f1116",
+          primaryColor: "#171b22",
+          primaryTextColor: "#f5f7fb",
+          primaryBorderColor: "#4a5568",
+          lineColor: "#8b97ab",
+          secondaryColor: "#151922",
+          tertiaryColor: "#101319",
+          fontFamily: "Segoe UI, Apple SD Gothic Neo, sans-serif"
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow">Component Architecture</div>
+        <h1>컴포넌트 구현 시각화 문서</h1>
+        <p>
+          이 문서는 과제의 Component 요구사항에 맞춰 현재 프로젝트가
+          <strong>컴포넌트를 어떤 구조로 구현했는지</strong>를 설명합니다.
+          핵심은 <code>FunctionComponent</code>, 루트 상태, props-only 자식 컴포넌트 구조입니다.
+        </p>
+        <div class="chip-row">
+          <div class="chip">FunctionComponent</div>
+          <div class="chip">RootApp</div>
+          <div class="chip">StopwatchCard</div>
+          <div class="chip">Props-only Child</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <section>
+          <h2>1. 전체 컴포넌트 구조</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["mountApp()"] --> B["new FunctionComponent(RootApp, container)"]
+    B --> C["FunctionComponent 인스턴스"]
+    C --> D["mount()"]
+    D --> E["RootApp() 실행"]
+    E --> F["StopwatchCard(props) 호출"]
+    F --> G["VNode 트리 반환"]
+    G --> H["실제 DOM 마운트"]
+          </pre>
+        </section>
+
+        <div class="subgrid">
+          <section>
+            <h2>2. 왜 FunctionComponent 클래스를 두었나</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["함수형 컴포넌트는 호출될 때마다 다시 실행됨"] --> B["지역변수만으로는 상태 유지 불가"]
+    B --> C["상태를 저장할 외부 컨텍스트 필요"]
+    C --> D["FunctionComponent 인스턴스 생성"]
+    D --> E["hooks[] 저장"]
+    D --> F["hookIndex 관리"]
+    D --> G["mount / update / unmount 관리"]
+    D --> H["pendingEffects 관리"]
+            </pre>
+          </section>
+
+          <section>
+            <h2>3. 루트와 자식의 역할 분리</h2>
+            <pre class="mermaid">
+flowchart LR
+    A["RootApp"] --> A1["루트 상태 보유"]
+    A --> A2["이벤트 핸들러 보유"]
+    A --> A3["useEffect / useMemo 사용"]
+    A --> A4["props 조립"]
+
+    B["StopwatchCard"] --> B1["props 수신"]
+    B --> B2["화면만 렌더"]
+    B --> B3["상태 없음"]
+    B --> B4["hooks 사용 안 함"]
+            </pre>
+          </section>
+        </div>
+
+        <div class="subgrid">
+          <section>
+            <h2>4. 현재 프로젝트의 컴포넌트 계층</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["RootApp()"] --> B["main.page-shell"]
+    B --> C["StopwatchCard(props)"]
+    C --> D["eyebrow-label"]
+    C --> E["main-time"]
+    C --> F["sub-time"]
+    C --> G["action buttons"]
+    C --> H["laps-panel"]
+            </pre>
+          </section>
+
+          <section>
+            <h2>5. RootApp 내부 구성</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["RootApp"] --> B["state"]
+    A --> C["effects"]
+    A --> D["memo"]
+    A --> E["handlers"]
+    A --> F["render"]
+
+    B --> B1["running"]
+    B --> B2["elapsedMs"]
+    B --> B3["startedAtMs"]
+    B --> B4["laps"]
+
+    C --> C1["interval effect"]
+    C --> C2["document.title effect"]
+
+    D --> D1["summary 계산"]
+
+    E --> E1["handlePrimaryAction"]
+    E --> E2["handleLapRecord"]
+
+    F --> F1["StopwatchCard에 props 전달"]
+            </pre>
+          </section>
+        </div>
+
+        <section>
+          <h2>6. StopwatchCard 내부 구성</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["StopwatchCard(props)"] --> B["formatStopwatch(elapsedMs)"]
+    A --> C["formatStopwatch(latestLapMs)"]
+    A --> D["버튼 텍스트 결정"]
+    A --> E["랩 목록 렌더"]
+    E --> F["lap-row class 계산"]
+    E --> G["empty-laps 또는 laps-body"]
+          </pre>
+          <div class="notes">
+            <p><code>StopwatchCard</code>는 상태를 갖지 않고, 부모가 넘긴 props만 이용해 화면을 그립니다. 과제의 stateless 자식 요구사항을 그대로 반영한 구조입니다.</p>
+          </div>
+        </section>
+
+        <div class="subgrid">
+          <section>
+            <h2>7. mount와 update 흐름</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["mount()"] --> B["#render()"]
+    B --> C["RootApp() 실행"]
+    C --> D["VNode 생성"]
+    D --> E["createDOMFromVNode"]
+    E --> F["container.replaceChildren"]
+    F --> G["flushEffects()"]
+
+    H["update()"] --> I["#render()"]
+    I --> J["RootApp() 재실행"]
+    J --> K["새 VNode 생성"]
+    K --> L["diff(oldVNode, newVNode)"]
+    L --> M["applyPatches(dom, patches, newVNode)"]
+    M --> N["flushEffects()"]
+            </pre>
+          </section>
+
+          <section>
+            <h2>8. props 전달 흐름</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["RootApp 상태와 계산 결과"] --> B["running"]
+    A --> C["elapsedMs"]
+    A --> D["latestLapMs"]
+    A --> E["laps"]
+    A --> F["fastestLapId / slowestLapId"]
+    A --> G["onPrimaryAction / onSecondaryAction"]
+
+    B --> H["StopwatchCard(props)"]
+    C --> H
+    D --> H
+    E --> H
+    F --> H
+    G --> H
+            </pre>
+          </section>
+        </div>
+
+        <section>
+          <h2>9. 과제 요구사항과 연결하면</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["과제의 Component 요구사항"] --> B["반드시 함수형 컴포넌트"]
+    A --> C["FunctionComponent 클래스 필요"]
+    A --> D["hooks 배열 필요"]
+    A --> E["mount / update 필요"]
+    A --> F["루트 상태 관리"]
+    A --> G["자식은 stateless props-only"]
+
+    B --> B1["RootApp / StopwatchCard"]
+    C --> C1["FunctionComponent.js"]
+    D --> D1["this.hooks = []"]
+    E --> E1["mount() / update()"]
+    F --> F1["RootApp state"]
+    G --> G1["StopwatchCard(props)"]
+          </pre>
+          <div class="quote">
+            이 프로젝트의 컴포넌트 구조는 <code>FunctionComponent</code>가 함수형 컴포넌트의 실행 컨텍스트를 맡고, 루트 <code>RootApp</code>이 상태와 로직을 모두 관리하며, 자식 <code>StopwatchCard</code>는 props만 받아 화면을 그리는 stateless 구조입니다.
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+  </html>

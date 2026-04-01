@@ -1,5 +1,5 @@
 import { PATCH_TYPES } from "./constants.js";
-import { normalizeVNodePaths } from "./vnode.js";
+import { buildKey } from "./helpers.js";
 
 /**
  * 속성 설정 패치입니다.
@@ -106,6 +106,14 @@ function diffAttrs(oldAttrs = {}, newAttrs = {}, path, patches) {
   });
 }
 
+function getVNodeLookupKey(node, fallbackKey) {
+  if (!node || node.type === "text") {
+    return fallbackKey;
+  }
+
+  return buildKey(node.attrs, fallbackKey);
+}
+
 /**
  * 자식 배열을 키 기준 인덱스 맵으로 변환합니다.
  *
@@ -115,7 +123,7 @@ function diffAttrs(oldAttrs = {}, newAttrs = {}, path, patches) {
 function createChildKeyMap(children) {
   const map = new Map();
   children.forEach((child, index) => {
-    map.set(child.key || `__index_${index}`, index);
+    map.set(getVNodeLookupKey(child, `__index_${index}`), index);
   });
   return map;
 }
@@ -135,7 +143,7 @@ function diffChildren(oldChildren, newChildren, parentPath, patches) {
   const nextOrder = [];
 
   newChildren.forEach((newChild, index) => {
-    const lookupKey = newChild.key || `__index_${index}`;
+    const lookupKey = getVNodeLookupKey(newChild, `__index_${index}`);
     nextOrder.push(lookupKey);
 
     if (!oldKeyMap.has(lookupKey)) {
@@ -150,15 +158,20 @@ function diffChildren(oldChildren, newChildren, parentPath, patches) {
     }
 
     const oldIndex = oldKeyMap.get(lookupKey);
-    diffInternal(oldChildren[oldIndex], newChild, `${parentPath}-${index}`, patches);
+    diffInternal(
+      oldChildren[oldIndex],
+      newChild,
+      `${parentPath}-${oldIndex}`,
+      patches,
+    );
   });
 
   oldChildren.forEach((oldChild, index) => {
-    const lookupKey = oldChild.key || `__index_${index}`;
+    const lookupKey = getVNodeLookupKey(oldChild, `__index_${index}`);
     if (!newKeyMap.has(lookupKey)) {
       patches.push({
         type: PATCH_TYPES.REMOVE,
-        path: oldChild.path || `${parentPath}-${index}`,
+        path: `${parentPath}-${index}`,
         parentPath,
         index,
         node: oldChild,
@@ -167,7 +180,7 @@ function diffChildren(oldChildren, newChildren, parentPath, patches) {
   });
 
   const previousOrder = oldChildren.map(
-    (child, index) => child.key || `__index_${index}`,
+    (child, index) => getVNodeLookupKey(child, `__index_${index}`),
   );
 
   if (
@@ -251,7 +264,5 @@ function diffInternal(oldNode, newNode, path = "0", patches = []) {
  * @returns {Patch[]} 두 트리의 차이를 담은 패치 배열입니다.
  */
 export function diff(oldNode, newNode, path = "0", patches = []) {
-  normalizeVNodePaths(oldNode, path, 0);
-  normalizeVNodePaths(newNode, path, 0);
   return diffInternal(oldNode, newNode, path, patches);
 }

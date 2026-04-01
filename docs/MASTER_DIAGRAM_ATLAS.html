@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>마스터 다이어그램 아틀라스</title>
+    <style>
+      :root {
+        --bg: #050608;
+        --panel: rgba(14, 16, 20, 0.88);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #f5f7fb;
+        --muted: #9ea7b7;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 40px 20px 96px;
+        color: var(--text);
+        font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(255, 115, 92, 0.14), transparent 26%),
+          radial-gradient(circle at 20% 20%, rgba(109, 135, 255, 0.1), transparent 22%),
+          linear-gradient(180deg, #090b10, var(--bg));
+      }
+      main { width: min(1280px, 100%); margin: 0 auto; }
+      .hero { margin-bottom: 28px; }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        line-height: 1.05;
+      }
+      .hero p {
+        max-width: 920px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+      }
+      .grid { display: grid; gap: 20px; }
+      section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      h2 { margin: 0 0 14px; font-size: 1.2rem; }
+      pre.mermaid { margin: 0; overflow: auto; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+      }
+      th, td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+      th { background: rgba(255,255,255,0.05); }
+      .notes {
+        margin-top: 14px;
+        color: var(--muted);
+        line-height: 1.72;
+        font-size: 0.96rem;
+      }
+    </style>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          background: "#0f1116",
+          primaryColor: "#171b22",
+          primaryTextColor: "#f5f7fb",
+          primaryBorderColor: "#4a5568",
+          lineColor: "#8b97ab",
+          secondaryColor: "#151922",
+          tertiaryColor: "#101319",
+          fontFamily: "Segoe UI, Apple SD Gothic Neo, sans-serif"
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow">Master Diagram Atlas</div>
+        <h1>마스터 다이어그램 아틀라스</h1>
+        <p>면접관이나 리뷰어가 저장소의 다이어그램만 보고도 전체 구조를 이해할 수 있도록, 어떤 질문에 어떤 문서를 보면 되는지 안내하는 종합 문서입니다.</p>
+      </div>
+
+      <div class="grid">
+        <section>
+          <h2>1. 전체 지도</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["이 저장소를 처음 본다"] --> B["과제 요구사항과 구현 범위 확인"]
+    B --> C["REQUIREMENTS_IMPLEMENTATION_MAP"]
+
+    C --> D["컴포넌트 구조 확인"]
+    D --> E["COMPONENT_IMPLEMENTATION_FLOW"]
+
+    E --> F["Hooks와 VDOM 연결 이해"]
+    F --> G["HOOKS_VDOM_FLOW"]
+
+    G --> H["시스템 실행 전체 흐름 확인"]
+    H --> I["FLOWCHARTS"]
+
+    I --> J["자료구조 / 알고리즘 분석"]
+    J --> K["DS_ALGO_DIAGRAMS"]
+
+    K --> L["타입 / 객체 관계 확인"]
+    L --> M["CLASS_DIAGRAM"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>2. 질문별 문서 매핑</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["궁금한 질문"] --> B["과제 조건을 만족했나?"]
+    A --> C["Week 4 VDOM을 어떻게 활용했나?"]
+    A --> D["컴포넌트는 어떻게 나눴나?"]
+    A --> E["Hook은 어떻게 구현했나?"]
+    A --> F["상태가 바뀌면 화면은 어떻게 바뀌나?"]
+    A --> G["자료구조 / 알고리즘은 뭔가?"]
+    A --> H["클래스 / 타입 관계는 어떤가?"]
+
+    B --> B1["REQUIREMENTS_IMPLEMENTATION_MAP"]
+    C --> C1["REQUIREMENTS_IMPLEMENTATION_MAP"]
+    D --> D1["COMPONENT_IMPLEMENTATION_FLOW"]
+    E --> E1["HOOKS_VDOM_FLOW"]
+    F --> F1["FLOWCHARTS"]
+    G --> G1["DS_ALGO_DIAGRAMS"]
+    H --> H1["CLASS_DIAGRAM"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>3. 문서별 역할</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>문서</th>
+                <th>역할</th>
+                <th>면접 질문 예시</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>REQUIREMENTS_IMPLEMENTATION_MAP</code></td><td>과제 요구사항 대응, Week 4 VDOM 활용 방식 설명</td><td>"이 과제 요구사항을 어떻게 충족했나요?"</td></tr>
+              <tr><td><code>COMPONENT_IMPLEMENTATION_FLOW</code></td><td>FunctionComponent, RootApp, StopwatchCard 구조 설명</td><td>"왜 이런 컴포넌트 구조로 나눴나요?"</td></tr>
+              <tr><td><code>HOOKS_VDOM_FLOW</code></td><td>useState/useEffect/useMemo와 VDOM 연결 설명</td><td>"Hook이 정확히 뭐고 VDOM과 어떤 관계인가요?"</td></tr>
+              <tr><td><code>FLOWCHARTS</code></td><td>시스템 전체 실행 흐름과 파일 구성</td><td>"사용자 입력부터 DOM 반영까지 설명해보세요."</td></tr>
+              <tr><td><code>DS_ALGO_DIAGRAMS</code></td><td>자료구조, 알고리즘, 복잡도 설명</td><td>"이 구현의 자료구조와 알고리즘은 무엇인가요?"</td></tr>
+              <tr><td><code>CLASS_DIAGRAM</code></td><td>런타임 객체, VNode, Patch, Hook 구조 설명</td><td>"내부 객체 구조를 한눈에 설명해보세요."</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>4. 추천 보는 순서</h2>
+          <pre class="mermaid">
+flowchart LR
+    A["1. REQUIREMENTS_IMPLEMENTATION_MAP"] --> B["2. COMPONENT_IMPLEMENTATION_FLOW"]
+    B --> C["3. HOOKS_VDOM_FLOW"]
+    C --> D["4. FLOWCHARTS"]
+    D --> E["5. DS_ALGO_DIAGRAMS"]
+    E --> F["6. CLASS_DIAGRAM"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>5. 면접관 관점 핵심 포인트</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["면접관이 보고 싶어하는 것"] --> B["원리 이해"]
+    A --> C["설계 이유"]
+    A --> D["기술적 한계 인식"]
+    A --> E["이전 결과물 활용 방식"]
+
+    B --> B1["HOOKS_VDOM_FLOW / DS_ALGO_DIAGRAMS"]
+    C --> C1["COMPONENT_IMPLEMENTATION_FLOW / FLOWCHARTS"]
+    D --> D1["REQUIREMENTS_IMPLEMENTATION_MAP / DS_ALGO_DIAGRAMS"]
+    E --> E1["REQUIREMENTS_IMPLEMENTATION_MAP"]
+          </pre>
+          <div class="notes">이 문서의 목적은 다이어그램 간 연결 관계를 보여주는 것입니다. 즉, 다이어그램 묶음 전체를 하나의 포트폴리오 설명 체계로 바꿔줍니다.</div>
+        </section>
+      </div>
+    </main>
+  </body>
+  </html>

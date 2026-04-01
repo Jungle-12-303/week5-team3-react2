@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>실제 React와의 차이점 비교표</title>
+    <style>
+      :root {
+        --bg: #050608;
+        --panel: rgba(14, 16, 20, 0.88);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #f5f7fb;
+        --muted: #9ea7b7;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 40px 20px 96px;
+        color: var(--text);
+        font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(255, 115, 92, 0.14), transparent 26%),
+          radial-gradient(circle at 20% 20%, rgba(109, 135, 255, 0.1), transparent 22%),
+          linear-gradient(180deg, #090b10, var(--bg));
+      }
+      main { width: min(1280px, 100%); margin: 0 auto; }
+      .hero { margin-bottom: 28px; }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        line-height: 1.05;
+      }
+      .hero p {
+        max-width: 920px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+      }
+      .grid { display: grid; gap: 20px; }
+      section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      h2 { margin: 0 0 14px; font-size: 1.2rem; }
+      pre.mermaid { margin: 0; overflow: auto; }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+      }
+      th, td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+      th { background: rgba(255,255,255,0.05); }
+      .notes {
+        margin-top: 14px;
+        color: var(--muted);
+        line-height: 1.72;
+        font-size: 0.96rem;
+      }
+    </style>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          background: "#0f1116",
+          primaryColor: "#171b22",
+          primaryTextColor: "#f5f7fb",
+          primaryBorderColor: "#4a5568",
+          lineColor: "#8b97ab",
+          secondaryColor: "#151922",
+          tertiaryColor: "#101319",
+          fontFamily: "Segoe UI, Apple SD Gothic Neo, sans-serif"
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow">React Comparison</div>
+        <h1>실제 React와의 차이점 비교표</h1>
+        <p>현재 프로젝트와 실제 React가 어디까지 비슷하고, 어디서부터 설계적으로 갈라지는지 설명하는 문서입니다.</p>
+      </div>
+
+      <div class="grid">
+        <section>
+          <h2>1. 한눈에 보는 비교</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["현재 프로젝트"] --> B["교육용 / 과제용 React 코어"]
+    C["실제 React"] --> D["대규모 실서비스용 UI 런타임"]
+
+    B --> E["핵심 원리 드러내기"]
+    D --> F["성능 / 안정성 / 생태계 / 확장성"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>2. 비교표</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>주제</th>
+                <th>현재 프로젝트</th>
+                <th>실제 React</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>목적</td><td>React 핵심 원리 구현과 설명</td><td>대규모 UI 애플리케이션 운영</td></tr>
+              <tr><td>컴포넌트 구조</td><td>루트 중심 함수형 컴포넌트</td><td>컴포넌트별 독립 실행 단위</td></tr>
+              <tr><td>상태 저장</td><td><code>hooks[]</code> 배열 + 호출 순서</td><td>Fiber + Hook dispatcher</td></tr>
+              <tr><td>렌더링 단위</td><td>루트 <code>RootApp()</code> 전체 재실행</td><td>서브트리 단위 업데이트 최적화</td></tr>
+              <tr><td>스케줄링</td><td><code>queueMicrotask</code> 기반 단순 batching</td><td>우선순위, concurrent rendering, scheduler</td></tr>
+              <tr><td>diff 전략</td><td>실용적인 heuristic diff</td><td>더 정교한 reconciliation</td></tr>
+              <tr><td>이벤트 시스템</td><td>직접 DOM 이벤트 연결</td><td>Synthetic event 시스템</td></tr>
+              <tr><td>최적화</td><td><code>useMemo</code>, batching 정도</td><td><code>memo</code>, lazy, suspense, concurrent features</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <h2>3. Hook 구현 비교</h2>
+          <pre class="mermaid">
+flowchart LR
+    A["현재 프로젝트"] --> A1["currentInstance"]
+    A --> A2["hookIndex"]
+    A --> A3["hooks[]"]
+
+    B["실제 React"] --> B1["Fiber Node"]
+    B --> B2["Dispatcher"]
+    B --> B3["Hook internals"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>4. 렌더링 비교</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["현재 프로젝트"] --> B["상태 변경"]
+    B --> C["RootApp 전체 재실행"]
+    C --> D["새 VDOM 생성"]
+    D --> E["diff / patch"]
+
+    F["실제 React"] --> G["상태 변경"]
+    G --> H["해당 컴포넌트/서브트리 중심 업데이트"]
+    H --> I["reconciliation"]
+    I --> J["commit 단계 반영"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>5. 스케줄링 비교</h2>
+          <pre class="mermaid">
+flowchart LR
+    A["현재 프로젝트"] --> A1["queueMicrotask(update)"]
+    A --> A2["단순 batching"]
+
+    B["실제 React"] --> B1["Scheduler"]
+    B --> B2["우선순위 기반 작업 분배"]
+    B --> B3["Concurrent Rendering"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>6. 이벤트 비교</h2>
+          <pre class="mermaid">
+flowchart LR
+    A["현재 프로젝트"] --> A1["onClick 속성 직접 연결"]
+    A --> A2["element.__vdomListeners 캐시"]
+
+    B["실제 React"] --> B1["Synthetic Event"]
+    B --> B2["이벤트 위임"]
+    B --> B3["브라우저 차이 추상화"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>7. 무엇이 같고 무엇이 다른가</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["같은 점"] --> B["함수형 컴포넌트"]
+    A --> C["Hook 호출 순서 기반 상태 매핑"]
+    A --> D["VDOM diff 후 DOM 반영"]
+
+    E["다른 점"] --> F["Fiber 없음"]
+    E --> G["Concurrent Rendering 없음"]
+    E --> H["Synthetic Event 없음"]
+    E --> I["서브트리 최적화 제한"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>8. 왜 이렇게 단순화했는가</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["과제 목표"] --> B["학습보다 구현 우선"]
+    B --> C["원리 설명 가능해야 함"]
+    C --> D["핵심 개념만 남김"]
+    D --> E["FunctionComponent"]
+    D --> F["Hooks"]
+    D --> G["VDOM diff/patch"]
+    D --> H["batching"]
+          </pre>
+          <div class="notes">이번 프로젝트의 목표는 실제 React를 완전히 복제하는 것이 아니라, React가 왜 그런 구조를 가지는지 보여 주는 최소 엔진을 만드는 것입니다.</div>
+        </section>
+      </div>
+    </main>
+  </body>
+  </html>

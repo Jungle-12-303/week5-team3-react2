@@ -8,10 +8,12 @@ React 없이 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, `Virtual D
 
 - [중간 분석 보고서](./docs/INTERMEDIATE_REVIEW_REPORT.md)
 - [과제 요구사항 · 구현 매핑 문서](./docs/REQUIREMENTS_IMPLEMENTATION_MAP.md)
+- [Hooks · Virtual DOM 연결 흐름도](./docs/HOOKS_VDOM_FLOW.md)
 - [시스템 구성도와 흐름도](./docs/FLOWCHARTS.md)
 - [자료구조 · 알고리즘 시각화](./docs/DS_ALGO_DIAGRAMS.md)
 - 브라우저용 문서
   - `docs/REQUIREMENTS_IMPLEMENTATION_MAP.html`
+  - `docs/HOOKS_VDOM_FLOW.html`
   - `docs/FLOWCHARTS.html`
   - `docs/DS_ALGO_DIAGRAMS.html`
 

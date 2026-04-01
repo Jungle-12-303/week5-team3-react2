@@ -1,6 +1,13 @@
 import { assertHookContext, getCurrentInstance } from "./runtime.js";
 import { haveDepsChanged } from "./utils.js";
 
+/**
+ * 상태 값을 읽고 갱신 함수를 반환하는 훅입니다.
+ *
+ * @template T
+ * @param {T | (() => T)} initialValue 초기 상태 값 또는 초기값 생성 함수입니다.
+ * @returns {[T, (nextValue: T | ((currentValue: T) => T)) => void]} 현재 상태와 상태 갱신 함수입니다.
+ */
 export function useState(initialValue) {
   assertHookContext("useState");
 
@@ -39,6 +46,13 @@ export function useState(initialValue) {
   return [hook.value, hook.setState];
 }
 
+/**
+ * 렌더 후 이펙트를 실행하고 필요하면 cleanup을 등록하는 훅입니다.
+ *
+ * @param {() => void | (() => void)} effect 렌더 후 실행할 이펙트 함수입니다.
+ * @param {unknown[] | undefined} deps 이펙트 재실행 여부를 판단할 의존성 배열입니다.
+ * @returns {void} 이펙트 실행을 예약하거나 유지합니다.
+ */
 export function useEffect(effect, deps) {
   assertHookContext("useEffect");
 
@@ -73,6 +87,14 @@ export function useEffect(effect, deps) {
   instance.hookIndex += 1;
 }
 
+/**
+ * 의존성이 바뀔 때만 계산을 다시 수행하고 결과를 캐시하는 훅입니다.
+ *
+ * @template T
+ * @param {() => T} factory 캐시할 값을 계산하는 함수입니다.
+ * @param {unknown[] | undefined} deps 값을 다시 계산할지 판단할 의존성 배열입니다.
+ * @returns {T} 현재 의존성 기준으로 캐시된 계산 결과입니다.
+ */
 export function useMemo(factory, deps) {
   assertHookContext("useMemo");
 

@@ -80,12 +80,14 @@ export class FunctionComponent {
    */
   mount() {
     const nextVNode = this.#render();
+    /* commit start */
     const nextDom = createDOMFromVNode(nextVNode);
 
     this.container.replaceChildren(nextDom);
     this.vnode = nextVNode;
     this.dom = nextDom;
     this.isMounted = true;
+    /* commit end */
     this.#flushEffects();
     return this;
   }
@@ -179,7 +181,7 @@ export class FunctionComponent {
         hook.cleanup();
       }
 
-      const cleanup = effect();
+      const cleanup = effect(); // 실행 후 cleanup함수 받기
       hook.cleanup = typeof cleanup === "function" ? cleanup : null;
     }
 

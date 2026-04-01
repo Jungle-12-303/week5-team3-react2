@@ -8,7 +8,6 @@ export function mountApp(container = document.querySelector("#app")) {
 
   const app = new FunctionComponent(RootApp, container);
   app.mount();
-  window.customReactApp = app;
   return app;
 }
 

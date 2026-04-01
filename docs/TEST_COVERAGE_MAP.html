@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>테스트 커버리지 지도</title>
+    <style>
+      :root {
+        --bg: #050608;
+        --panel: rgba(14, 16, 20, 0.88);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #f5f7fb;
+        --muted: #9ea7b7;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 40px 20px 96px;
+        color: var(--text);
+        font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(255, 115, 92, 0.14), transparent 26%),
+          radial-gradient(circle at 20% 20%, rgba(109, 135, 255, 0.1), transparent 22%),
+          linear-gradient(180deg, #090b10, var(--bg));
+      }
+      main { width: min(1280px, 100%); margin: 0 auto; }
+      .hero { margin-bottom: 28px; }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        line-height: 1.05;
+      }
+      .hero p {
+        max-width: 920px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+      }
+      .grid { display: grid; gap: 20px; }
+      section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      h2 { margin: 0 0 14px; font-size: 1.2rem; }
+      pre.mermaid { margin: 0; overflow: auto; }
+      .notes {
+        margin-top: 14px;
+        color: var(--muted);
+        line-height: 1.72;
+        font-size: 0.96rem;
+      }
+    </style>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          background: "#0f1116",
+          primaryColor: "#171b22",
+          primaryTextColor: "#f5f7fb",
+          primaryBorderColor: "#4a5568",
+          lineColor: "#8b97ab",
+          secondaryColor: "#151922",
+          tertiaryColor: "#101319",
+          fontFamily: "Segoe UI, Apple SD Gothic Neo, sans-serif"
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow">Test Coverage Map</div>
+        <h1>테스트 커버리지 지도</h1>
+        <p>현재 테스트가 어떤 모듈을 검증하는지, 무엇이 강하게 커버되고 무엇은 상대적으로 약한지를 정리한 문서입니다.</p>
+      </div>
+
+      <div class="grid">
+        <section>
+          <h2>1. 테스트 전체 지도</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["tests/"] --> B["app.test.js"]
+    A --> C["function-component.test.js"]
+    A --> D["vdom.test.js"]
+
+    B --> B1["실제 앱 흐름 검증"]
+    C --> C1["Hooks / batching 검증"]
+    D --> D1["diff / patch 검증"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>2. 테스트와 모듈 매핑</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["app.test.js"] --> A1["src/app.js"]
+    A --> A2["src/RootApp.js"]
+    A --> A3["src/components/StopwatchCard.js"]
+    A --> A4["src/utils/formatStopwatch.js"]
+
+    B["function-component.test.js"] --> B1["src/core/function-component/FunctionComponent.js"]
+    B --> B2["src/core/function-component/hooks.js"]
+    B --> B3["src/core/function-component/runtime.js"]
+    B --> B4["src/core/function-component/utils.js"]
+
+    C["vdom.test.js"] --> C1["src/core/vdom/vnode.js"]
+    C --> C2["src/core/vdom/diff.js"]
+    C --> C3["src/core/vdom/patch.js"]
+    C --> C4["src/core/vdom/dom.js"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>3. 테스트 레벨 분류</h2>
+          <pre class="mermaid">
+flowchart LR
+    A["단위 테스트"] --> A1["function-component.test.js"]
+    A --> A2["vdom.test.js"]
+
+    B["통합 테스트"] --> B1["app.test.js"]
+
+    C["현재 없음"] --> C1["실브라우저 E2E"]
+    C --> C2["시각 회귀 테스트"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>4. app.test.js가 검증하는 흐름</h2>
+          <pre class="mermaid">
+sequenceDiagram
+    participant T as Test
+    participant A as mountApp
+    participant U as UI
+    participant S as Stopwatch State
+
+    T->>A: mountApp(#app)
+    T->>U: "시작" 클릭
+    U->>S: running = true
+    T->>T: 120ms 대기
+    T->>U: "구간 기록" 클릭
+    U->>S: laps 추가
+    T->>U: lap-row 존재 확인
+    T->>U: "정지" 클릭
+    U->>S: running = false
+    T->>U: "초기화" 클릭
+    U->>S: elapsedMs / laps 초기화
+    T->>U: 00:00.00 및 lap-row 0개 확인
+          </pre>
+        </section>
+
+        <section>
+          <h2>5. function-component.test.js가 검증하는 흐름</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["useState persists state and batches updates"] --> B["alpha / beta 상태 생성"]
+    B --> C["setAlpha + setBeta 연속 호출"]
+    C --> D["한 microtask 뒤 한 번만 렌더"]
+    D --> E["renderCount = 2 확인"]
+
+    F["useEffect cleanup and useMemo caches values"] --> G["running 상태 생성"]
+    G --> H["useMemo(label) 계산"]
+    H --> I["useEffect(label) 등록"]
+    I --> J["running=true로 변경"]
+    J --> K["cleanup:STOP -> effect:RUN 순서 확인"]
+    K --> L["memoRuns = 2 확인"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>6. vdom.test.js가 검증하는 흐름</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["diff + patch updates only changed text and attributes"] --> B["oldTree 생성"]
+    B --> C["newTree 생성"]
+    C --> D["diff(old, new)"]
+    D --> E["applyPatches()"]
+    E --> F["텍스트 / class / data-mode 변경 확인"]
+
+    G["diff + patch creates and removes child nodes"] --> H["old ul/li 트리 생성"]
+    H --> I["new ul/li 트리 생성"]
+    I --> J["diff(old, new)"]
+    J --> K["applyPatches()"]
+    K --> L["child create/remove 결과 확인"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>7. 강한 부분과 약한 부분</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["강하게 검증된 부분"] --> B["Hook 상태 유지"]
+    A --> C["Effect cleanup"]
+    A --> D["Memo 캐싱"]
+    A --> E["Microtask batching"]
+    A --> F["Text / Attr diff"]
+    A --> G["Create / Remove patch"]
+    A --> H["실제 스톱워치 사용자 흐름"]
+
+    I["상대적으로 약한 부분"] --> J["REORDER_CHILDREN 실사용 시나리오"]
+    I --> K["실브라우저 렌더링 시각 검증"]
+    I --> L["이벤트 종류 다양성"]
+    I --> M["장시간 interval drift 관찰"]
+    I --> N["unmount 이후 비동기 잔존 동작"]
+          </pre>
+          <div class="notes">현재 테스트는 과제 기준 핵심은 충분히 커버하지만, 포트폴리오 기준으로는 E2E와 시각 검증이 들어가면 더 강해집니다.</div>
+        </section>
+      </div>
+    </main>
+  </body>
+  </html>

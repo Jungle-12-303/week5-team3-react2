@@ -14,6 +14,8 @@ React 없이 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, `Virtual D
 - [클래스 다이어그램 문서](./docs/CLASS_DIAGRAM.md)
 - [시스템 구성도와 흐름도](./docs/FLOWCHARTS.md)
 - [자료구조 · 알고리즘 시각화](./docs/DS_ALGO_DIAGRAMS.md)
+- [테스트 커버리지 지도](./docs/TEST_COVERAGE_MAP.md)
+- [실제 React와의 차이점 비교표](./docs/REACT_COMPARISON.md)
 - 브라우저용 문서
   - `docs/MASTER_DIAGRAM_ATLAS.html`
   - `docs/REQUIREMENTS_IMPLEMENTATION_MAP.html`
@@ -22,6 +24,8 @@ React 없이 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, `Virtual D
   - `docs/CLASS_DIAGRAM.html`
   - `docs/FLOWCHARTS.html`
   - `docs/DS_ALGO_DIAGRAMS.html`
+  - `docs/TEST_COVERAGE_MAP.html`
+  - `docs/REACT_COMPARISON.html`
 
 ## 실행
 

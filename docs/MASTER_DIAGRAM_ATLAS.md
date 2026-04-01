@@ -24,6 +24,12 @@ flowchart TD
 
     K --> L["타입 / 객체 관계 확인"]
     L --> M["CLASS_DIAGRAM"]
+
+    M --> N["테스트가 무엇을 검증하는지 확인"]
+    N --> O["TEST_COVERAGE_MAP"]
+
+    O --> P["실제 React와 차이 확인"]
+    P --> Q["REACT_COMPARISON"]
 ```
 
 ## 2. 질문별 문서 매핑
@@ -37,6 +43,8 @@ flowchart TD
     A --> F["상태가 바뀌면 화면은 어떻게 바뀌나?"]
     A --> G["자료구조 / 알고리즘은 뭔가?"]
     A --> H["클래스 / 타입 관계는 어떤가?"]
+    A --> I["테스트는 어디까지 검증하나?"]
+    A --> J["실제 React와 뭐가 다른가?"]
 
     B --> B1["REQUIREMENTS_IMPLEMENTATION_MAP"]
     C --> C1["REQUIREMENTS_IMPLEMENTATION_MAP"]
@@ -45,6 +53,8 @@ flowchart TD
     F --> F1["FLOWCHARTS"]
     G --> G1["DS_ALGO_DIAGRAMS"]
     H --> H1["CLASS_DIAGRAM"]
+    I --> I1["TEST_COVERAGE_MAP"]
+    J --> J1["REACT_COMPARISON"]
 ```
 
 ## 3. 문서별 역할
@@ -57,6 +67,8 @@ flowchart TD
 | `FLOWCHARTS` | 시스템 전체 실행 흐름과 파일 구성 | "사용자 입력부터 DOM 반영까지 설명해보세요." |
 | `DS_ALGO_DIAGRAMS` | 자료구조, 알고리즘, 복잡도 설명 | "이 구현의 자료구조와 알고리즘은 무엇인가요?" |
 | `CLASS_DIAGRAM` | 런타임 객체, VNode, Patch, Hook 구조 설명 | "내부 객체 구조를 한눈에 설명해보세요." |
+| `TEST_COVERAGE_MAP` | 테스트 구조와 검증 범위 설명 | "테스트는 무엇을 검증하나요?" |
+| `REACT_COMPARISON` | 실제 React와의 차이 설명 | "실제 React와 가장 큰 차이는 무엇인가요?" |
 
 ## 4. 추천 보는 순서
 
@@ -67,6 +79,8 @@ flowchart LR
     C --> D["4. FLOWCHARTS"]
     D --> E["5. DS_ALGO_DIAGRAMS"]
     E --> F["6. CLASS_DIAGRAM"]
+    F --> G["7. TEST_COVERAGE_MAP"]
+    G --> H["8. REACT_COMPARISON"]
 ```
 
 ## 5. 면접관 관점 핵심 포인트
@@ -77,13 +91,17 @@ flowchart TD
     A --> C["설계 이유"]
     A --> D["기술적 한계 인식"]
     A --> E["이전 결과물 활용 방식"]
+    A --> F["검증 신뢰도"]
+    A --> G["실제 React와의 거리"]
 
     B --> B1["HOOKS_VDOM_FLOW / DS_ALGO_DIAGRAMS"]
     C --> C1["COMPONENT_IMPLEMENTATION_FLOW / FLOWCHARTS"]
     D --> D1["REQUIREMENTS_IMPLEMENTATION_MAP / DS_ALGO_DIAGRAMS"]
     E --> E1["REQUIREMENTS_IMPLEMENTATION_MAP"]
+    F --> F1["TEST_COVERAGE_MAP"]
+    G --> G1["REACT_COMPARISON"]
 ```
 
 ## 6. 한 줄 요약
 
-> 이 저장소의 다이어그램은 `요구사항 -> 컴포넌트 구조 -> Hooks/VDOM 연결 -> 시스템 흐름 -> 자료구조/알고리즘 -> 클래스/타입 관계` 순서로 읽으면 전체 구현을 거의 빠짐없이 이해할 수 있게 설계되어 있습니다.
+> 이 저장소의 다이어그램은 `요구사항 -> 컴포넌트 구조 -> Hooks/VDOM 연결 -> 시스템 흐름 -> 자료구조/알고리즘 -> 클래스/타입 관계 -> 테스트 범위 -> 실제 React와의 차이` 순서로 읽으면 전체 구현을 거의 빠짐없이 이해할 수 있게 설계되어 있습니다.

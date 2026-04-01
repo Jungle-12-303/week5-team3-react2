@@ -2,6 +2,8 @@
 
 React 없이 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, `Virtual DOM diff + patch`를 직접 구현한 최소 시연 프로젝트입니다.
 
+추가 문서: [중간 분석 보고서](./docs/INTERMEDIATE_REVIEW_REPORT.md)
+
 ## 실행
 
 ```bash

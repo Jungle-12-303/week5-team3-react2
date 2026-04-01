@@ -1,84 +1,94 @@
 import { useEffect, useMemo, useState } from "./core/function-component.js";
 import { h } from "./core/vdom.js";
-import { CounterCard } from "./components/CounterCard.js";
-import { TimerCard } from "./components/TimerCard.js";
+import { StopwatchCard } from "./components/StopwatchCard.js";
 
 export function RootApp() {
-  const [scores, setScores] = useState({ alpha: 0, beta: 0 });
   const [running, setRunning] = useState(false);
-  const [seconds, setSeconds] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [startedAtMs, setStartedAtMs] = useState(null);
+  const [laps, setLaps] = useState([]);
 
   useEffect(() => {
-    if (!running) {
+    if (!running || startedAtMs === null) {
       return undefined;
     }
 
     const timerId = window.setInterval(() => {
-      setSeconds((current) => current + 1);
-    }, 1000);
+      setElapsedMs(Date.now() - startedAtMs);
+    }, 10);
 
     return () => window.clearInterval(timerId);
-  }, [running]);
+  }, [running, startedAtMs]);
 
   const summary = useMemo(() => {
-    const totalScore = scores.alpha + scores.beta;
-    const pace = seconds === 0 ? totalScore : (totalScore / seconds).toFixed(2);
+    const latestLapTotal = laps.length ? laps[0].totalMs : 0;
+    const latestLapMs = laps.length ? laps[0].lapMs : 0;
+    const comparableLaps = laps.slice(1);
 
     return {
-      totalScore,
-      paceLabel: `${pace}/sec`,
+      latestLapTotal,
+      latestLapMs,
+      fastestLapId:
+        comparableLaps.length > 1
+          ? comparableLaps.reduce((best, lap) =>
+              lap.lapMs < best.lapMs ? lap : best,
+            ).id
+          : null,
+      slowestLapId:
+        comparableLaps.length > 1
+          ? comparableLaps.reduce((worst, lap) =>
+              lap.lapMs > worst.lapMs ? lap : worst,
+            ).id
+          : null,
     };
-  }, [scores.alpha, scores.beta, seconds]);
+  }, [laps]);
 
   useEffect(() => {
-    document.title = `Week5 MVP | total ${summary.totalScore}`;
-  }, [summary.totalScore]);
+    document.title = `Week5 Stopwatch | ${running ? "RUN" : "STOP"} ${elapsedMs}`;
+  }, [running, elapsedMs]);
 
-  function changeScore(name, delta) {
-    setScores((current) => ({
-      ...current,
-      [name]: Math.max(0, current[name] + delta),
-    }));
+  function handlePrimaryAction() {
+    if (running) {
+      setRunning(false);
+      return;
+    }
+
+    setStartedAtMs(Date.now() - elapsedMs);
+    setRunning(true);
   }
 
-  function resetScore(name) {
-    setScores((current) => ({
-      ...current,
-      [name]: 0,
-    }));
-  }
+  function handleLapRecord() {
+    if (!running || elapsedMs === 0) {
+      setRunning(false);
+      setElapsedMs(0);
+      setStartedAtMs(null);
+      setLaps([]);
+      return;
+    }
 
-  function resetTimer() {
-    setRunning(false);
-    setSeconds(0);
+    const previousTotal = laps.length ? laps[0].totalMs : 0;
+    const nextLap = {
+      id: `${laps.length + 1}-${elapsedMs}`,
+      number: laps.length + 1,
+      lapMs: elapsedMs - previousTotal,
+      totalMs: elapsedMs,
+    };
+
+    setLaps((current) => [nextLap, ...current]);
   }
 
   return h(
     "main",
     { className: "page-shell" },
-    h(
-      "section",
-      { className: "content-grid" },
-      CounterCard({
-        title: "카운트 1",
-        value: scores.alpha,
-        onDecrease: () => changeScore("alpha", -1),
-        onIncrease: () => changeScore("alpha", 1),
-        onReset: () => resetScore("alpha"),
-      }),
-      CounterCard({
-        title: "카운트 2",
-        value: scores.beta,
-        onDecrease: () => changeScore("beta", -1),
-        onIncrease: () => changeScore("beta", 1),
-        onReset: () => resetScore("beta"),
-      }),
-      TimerCard({
-        running,
-        seconds,
-        onToggle: () => setRunning((current) => !current),
-        onReset: resetTimer,
-      }),
-    ),
+    StopwatchCard({
+      running,
+      elapsedMs,
+      latestLapMs: summary.latestLapMs,
+      laps,
+      fastestLapId: summary.fastestLapId,
+      slowestLapId: summary.slowestLapId,
+      onPrimaryAction: handlePrimaryAction,
+      onSecondaryAction: handleLapRecord,
+    }),
   );
 }

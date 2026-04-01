@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>자료구조 · 알고리즘 다이어그램</title>
+    <style>
+      :root {
+        --bg: #050608;
+        --panel: rgba(14, 16, 20, 0.88);
+        --panel-strong: rgba(18, 20, 25, 0.96);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #f5f7fb;
+        --muted: #9ea7b7;
+        --accent: #ff735c;
+        --blue: #6d87ff;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 40px 20px 96px;
+        color: var(--text);
+        font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(255, 115, 92, 0.14), transparent 26%),
+          radial-gradient(circle at 20% 20%, rgba(109, 135, 255, 0.1), transparent 22%),
+          linear-gradient(180deg, #090b10, var(--bg));
+      }
+
+      main {
+        width: min(1280px, 100%);
+        margin: 0 auto;
+      }
+
+      .hero {
+        margin-bottom: 28px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        line-height: 1.05;
+      }
+
+      .hero p {
+        max-width: 900px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+      }
+
+      .grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .subgrid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        font-size: 1.2rem;
+      }
+
+      pre.mermaid {
+        margin: 0;
+        overflow: auto;
+      }
+
+      .notes {
+        margin-top: 14px;
+        color: var(--muted);
+        line-height: 1.72;
+        font-size: 0.96rem;
+      }
+
+      .notes p {
+        margin: 0 0 10px;
+      }
+
+      .notes ul {
+        margin: 0;
+        padding-left: 18px;
+      }
+
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .highlight {
+        color: var(--accent);
+      }
+
+      .highlight-blue {
+        color: var(--blue);
+      }
+    </style>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          background: "#0f1116",
+          primaryColor: "#171b22",
+          primaryTextColor: "#f5f7fb",
+          primaryBorderColor: "#4a5568",
+          lineColor: "#8b97ab",
+          secondaryColor: "#151922",
+          tertiaryColor: "#101319",
+          fontFamily: "Segoe UI, Apple SD Gothic Neo, sans-serif"
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow">Data Structures and Algorithms</div>
+        <h1>자료구조 · 알고리즘 다이어그램</h1>
+        <p>
+          최신 스톱워치 시연 버전을 기준으로, 이 프로젝트를 파일 목록이 아니라
+          <span class="highlight-blue">트리 / 배열 / 맵 / 패치 리스트</span>와
+          <span class="highlight">diff / patch / batching / cleanup</span> 관점에서 정리한 학습용 자료입니다.
+        </p>
+        <div class="chip-row">
+          <div class="chip">VNode Tree</div>
+          <div class="chip">hooks[] Array</div>
+          <div class="chip">Map(key -&gt; index)</div>
+          <div class="chip">Patch List</div>
+          <div class="chip">Microtask Batching</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <section>
+          <h2>1. 핵심 자료구조 지도</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["FunctionComponent 인스턴스"] --> B["hooks[]&lt;br/&gt;state / effect / memo 저장"]
+    A --> C["pendingEffects[]&lt;br/&gt;렌더 후 effect 실행 큐"]
+    A --> D["vnode&lt;br/&gt;이전 Virtual DOM 루트"]
+    A --> E["dom&lt;br/&gt;현재 실제 DOM 루트"]
+    A --> F["updateScheduled&lt;br/&gt;batching 플래그"]
+
+    D --> G["VNode Tree&lt;br/&gt;type, tag, attrs, children, text, key, path, depth"]
+    G --> H["children[]&lt;br/&gt;트리 구조"]
+
+    I["diff() 결과"] --> J["patches[]&lt;br/&gt;CREATE / REMOVE / REPLACE / TEXT / ATTR / REORDER"]
+
+    K["diffChildren()"] --> L["Map(key -&gt; index)&lt;br/&gt;형제 노드 비교용"]
+
+    M["RootApp 상태"] --> N["running: boolean"]
+    M --> O["elapsedMs: number"]
+    M --> P["startedAtMs: number | null"]
+    M --> Q["laps: Lap[]"]
+          </pre>
+          <div class="notes">
+            <p><span class="highlight">FunctionComponent</span>는 엔진의 실행 컨텍스트이고, 그 안에 화면 갱신에 필요한 핵심 상태가 모두 모입니다.</p>
+            <ul>
+              <li><code>hooks[]</code>: 훅 호출 순서 기반 상태 저장소</li>
+              <li><code>pendingEffects[]</code>: 렌더 후 실행할 effect 큐</li>
+              <li><code>vnode</code>: 이전 렌더의 Virtual DOM 루트</li>
+              <li><code>dom</code>: 현재 실제 DOM 루트</li>
+              <li><code>patches[]</code>: diff 결과인 변경 명령 목록</li>
+            </ul>
+          </div>
+        </section>
+
+        <div class="subgrid">
+          <section>
+            <h2>2. 루트 상태 자료구조</h2>
+            <pre class="mermaid">
+flowchart LR
+    A["RootApp state"] --> B["running&lt;br/&gt;스톱워치 동작 여부"]
+    A --> C["elapsedMs&lt;br/&gt;현재 누적 시간(ms)"]
+    A --> D["startedAtMs&lt;br/&gt;시작 시점 또는 재개 기준 시각"]
+    A --> E["laps[]&lt;br/&gt;랩 기록 배열"]
+
+    E --> F["lap 0"]
+    E --> G["lap 1"]
+    E --> H["lap n"]
+
+    F --> F1["id"]
+    F --> F2["number"]
+    F --> F3["lapMs"]
+    F --> F4["totalMs"]
+            </pre>
+            <div class="notes">
+              <p><code>laps[]</code>는 최신 랩이 맨 앞에 오도록 관리됩니다. 그래서 시연 화면과 데이터 구조가 같은 방향을 가집니다.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2>3. VNode 트리 구조</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["RootApp()"] --> B["main.page-shell"]
+    B --> C["section.stopwatch-shell"]
+    C --> D["p.eyebrow-label"]
+    C --> E["p.main-time"]
+    C --> F["p.sub-time"]
+    C --> G["div.stopwatch-actions"]
+    G --> H["button.secondary-action"]
+    G --> I["button.primary-action"]
+    C --> J["section.laps-panel"]
+    J --> K["div.laps-header"]
+    J --> L["div.laps-body 또는 p.empty-laps"]
+    L --> M["div.lap-row * n"]
+            </pre>
+            <div class="notes">
+              <p>화면은 부모-자식 관계를 가진 계층 구조라서 트리 자료구조가 가장 자연스럽습니다. diff는 이 트리를 재귀적으로 비교합니다.</p>
+            </div>
+          </section>
+        </div>
+
+        <section>
+          <h2>4. Hooks 배열 인덱스 매핑</h2>
+          <pre class="mermaid">
+flowchart LR
+    A["RootApp 렌더 시작"] --> B["hookIndex = 0"]
+    B --> C["useState(running)"]
+    C --> C1["hooks[0] = state"]
+    C1 --> D["useState(elapsedMs)"]
+    D --> D1["hooks[1] = state"]
+    D1 --> E["useState(startedAtMs)"]
+    E --> E1["hooks[2] = state"]
+    E1 --> F["useState(laps)"]
+    F --> F1["hooks[3] = state"]
+    F1 --> G["useEffect(interval)"]
+    G --> G1["hooks[4] = effect"]
+    G1 --> H["useMemo(summary)"]
+    H --> H1["hooks[5] = memo"]
+    H1 --> I["useEffect(title)"]
+    I --> I1["hooks[6] = effect"]
+          </pre>
+          <div class="notes">
+            <p>이 엔진은 훅 이름이 아니라 <span class="highlight-blue">호출 순서</span>로 상태를 찾습니다. 그래서 배열이 가장 단순하고, 그래서 조건문 안에서 훅을 쓰면 안 됩니다.</p>
+          </div>
+        </section>
+
+        <div class="subgrid">
+          <section>
+            <h2>5. 상태 변경 알고리즘</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["사용자 이벤트 또는 interval tick"] --> B["setState(nextValue)"]
+    B --> C["기존 hook.value와 비교"]
+    C -->|같음| D["종료"]
+    C -->|다름| E["hook.value 갱신"]
+    E --> F["scheduleUpdate()"]
+    F --> G{"updateScheduled ?"}
+    G -->|예| H["이미 예약됨 -&gt; 종료"]
+    G -->|아니오| I["updateScheduled = true"]
+    I --> J["queueMicrotask(update)"]
+    J --> K["이번 동기 작업 종료 후 update 실행"]
+            </pre>
+            <div class="notes">
+              <p><span class="highlight">queueMicrotask</span>를 써서 update를 바로 하지 않고 잠깐 미룹니다. 이게 batching의 핵심입니다.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2>6. 스톱워치 액션 알고리즘</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["사용자 조작"] --> B{"어떤 액션인가?"}
+
+    B -->|시작| C["startedAtMs = Date.now() - elapsedMs"]
+    C --> D["running = true"]
+
+    B -->|정지| E["running = false"]
+
+    B -->|구간 기록| F{"running && elapsedMs > 0 ?"}
+    F -->|예| G["previousTotal = laps[0]?.totalMs || 0"]
+    G --> H["nextLap.lapMs = elapsedMs - previousTotal"]
+    H --> I["nextLap.totalMs = elapsedMs"]
+    I --> J["laps = [nextLap, ...current]"]
+    F -->|아니오| K["초기화 로직 수행"]
+
+    B -->|초기화| K
+    K --> L["running = false"]
+    L --> M["elapsedMs = 0"]
+    M --> N["startedAtMs = null"]
+    N --> O["laps = []"]
+            </pre>
+            <div class="notes">
+              <p>랩 시간은 현재 총 시간에서 직전 랩의 총 시간을 빼서 계산합니다. 그래서 별도 타이머를 두지 않고도 구간 기록을 만들 수 있습니다.</p>
+            </div>
+          </section>
+        </div>
+
+        <div class="subgrid">
+          <section>
+            <h2>7. useMemo 요약 계산 알고리즘</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["laps 변경"] --> B["useMemo(summary) 재계산"]
+    B --> C["latestLapTotal = laps[0]?.totalMs || 0"]
+    B --> D["latestLapMs = laps[0]?.lapMs || 0"]
+    B --> E["comparableLaps = laps.slice(1)"]
+    E --> F{"비교 가능한 랩 2개 이상?"}
+    F -->|예| G["reduce로 fastestLapId 계산"]
+    F -->|예| H["reduce로 slowestLapId 계산"]
+    F -->|아니오| I["둘 다 null"]
+            </pre>
+            <div class="notes">
+              <p>가장 최근 랩은 따로 강조되므로, 빠른 랩과 느린 랩 계산에서는 <code>laps.slice(1)</code>로 제외합니다.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2>8. Diff 알고리즘</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["diff(oldNode, newNode)"] --> B{"둘 중 하나가 null?"}
+    B -->|old 없음, new 있음| C["CREATE patch"]
+    B -->|old 있음, new 없음| D["REMOVE patch"]
+    B -->|둘 다 있음| E{"type / tag 동일?"}
+
+    E -->|아니오| F["REPLACE patch"]
+    E -->|예| G{"text node?"}
+    G -->|예| H["text 비교 -&gt; TEXT patch"]
+    G -->|아니오| I["attrs 비교"]
+    I --> J["diffChildren()"]
+    J --> K["자식 배열 재귀 비교"]
+            </pre>
+            <div class="notes">
+              <p>이 diff는 완전탐색으로 최소 편집 비용을 찾는 방식이 아니라, <span class="highlight-blue">실용적인 heuristic</span> 기반 비교입니다.</p>
+            </div>
+          </section>
+        </div>
+
+        <section>
+          <h2>9. 형제 노드 비교 알고리즘</h2>
+          <pre class="mermaid">
+flowchart LR
+    A["oldChildren[]"] --> B["createChildKeyMap(old)"]
+    C["newChildren[]"] --> D["createChildKeyMap(new)"]
+    B --> E["oldKeyMap"]
+    D --> F["newKeyMap"]
+
+    F --> G["newChildren 순회"]
+    G --> H{"oldKeyMap에 key 존재?"}
+    H -->|없음| I["CREATE"]
+    H -->|있음| J["oldChild와 재귀 diff"]
+
+    E --> K["oldChildren 순회"]
+    K --> L{"newKeyMap에 key 존재?"}
+    L -->|없음| M["REMOVE"]
+    L -->|있음| N["유지"]
+
+    G --> O["nextOrder 생성"]
+    O --> P{"old order != new order?"}
+    P -->|예| Q["REORDER_CHILDREN"]
+          </pre>
+          <div class="notes">
+            <p>랩 목록처럼 자식이 여러 개인 구간은 <code>Map(key -&gt; index)</code>가 중요합니다. key 기반으로 old child를 빠르게 찾아서 create / remove / reorder를 결정합니다.</p>
+          </div>
+        </section>
+
+        <div class="subgrid">
+          <section>
+            <h2>10. Patch 적용 알고리즘</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["patches[]"] --> B["REMOVE 분리"]
+    A --> C["CREATE 분리"]
+    A --> D["UPDATE 분리"]
+    A --> E["REORDER 분리"]
+
+    B --> F["깊은 path부터 REMOVE"]
+    D --> G["REPLACE / TEXT / ATTR_SET / ATTR_REMOVE"]
+    C --> H["얕은 path부터 CREATE"]
+    E --> I["REORDER_CHILDREN 마지막 적용"]
+
+    F --> J["실제 DOM 안정성 유지"]
+    G --> J
+    H --> J
+    I --> J
+            </pre>
+            <div class="notes">
+              <p>patch는 순서가 중요합니다. 특히 remove와 reorder를 잘못 처리하면 DOM 참조가 꼬일 수 있습니다.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2>11. 복잡도 관점 요약</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["VNode 생성"] --> A1["대체로 O(n)"]
+    B["normalizeVNodePaths"] --> B1["O(n)"]
+    C["diff 전체"] --> C1["대체로 O(n)"]
+    D["형제 비교 diffChildren"] --> D1["Map 사용으로 O(k)"]
+    E["patch 적용"] --> E1["patch 수와 path 길이에 비례"]
+    F["hook 접근"] --> F1["배열 인덱스 접근 O(1)"]
+    G["useMemo reduce"] --> G1["laps 길이에 비례"]
+            </pre>
+            <div class="notes">
+              <p>발표에서는 "전체적으로는 트리 한 번 순회하는 O(n) 성격이고, 형제 비교는 Map으로 선형 수준으로 줄였다" 정도로 설명하면 충분합니다.</p>
+            </div>
+          </section>
+        </div>
+
+        <div class="subgrid">
+          <section>
+            <h2>12. 메모리와 cleanup 관점</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["useEffect(interval) 등록"] --> B["setInterval(..., 10)"]
+    B --> C["elapsedMs 갱신"]
+    C --> D["cleanup 필요"]
+    D --> E["clearInterval(timerId)"]
+
+    F["unmount()"] --> G["effect cleanup 실행"]
+    G --> H["container.replaceChildren()"]
+    H --> I["hooks = []"]
+    I --> J["pendingEffects = []"]
+    J --> K["vnode = null / dom = null"]
+            </pre>
+            <div class="notes">
+              <p>이 엔진이 가비지 컬렉터를 직접 구현하는 것은 아닙니다. 대신 cleanup과 참조 해제를 통해 JS 런타임 GC가 회수할 수 있게 만듭니다.</p>
+            </div>
+          </section>
+
+          <section>
+            <h2>13. 장점과 한계</h2>
+            <div class="notes">
+              <p><span class="highlight">장점</span></p>
+              <ul>
+                <li>트리, 배열, 맵만으로 React 핵심 원리를 설명할 수 있습니다.</li>
+                <li>구현이 단순해서 발표와 학습에 적합합니다.</li>
+                <li>batching, cleanup, key 기반 비교까지 포함되어 교육용 밀도가 높습니다.</li>
+              </ul>
+              <p style="margin-top: 14px;"><span class="highlight-blue">한계</span></p>
+              <ul>
+                <li>루트 중심 구조라 상태 하나만 바뀌어도 RootApp 전체가 다시 실행됩니다.</li>
+                <li>diff는 최소 비용 완전탐색이 아니라 실용적인 heuristic 비교입니다.</li>
+                <li>실제 React처럼 Fiber 기반 서브트리 스케줄링은 없습니다.</li>
+              </ul>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </body>
+  </html>

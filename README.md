@@ -1,8 +1,17 @@
-# Week 5 React Core MVP
+# Week 5 React Core Stopwatch MVP
 
-React 없이 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, `Virtual DOM diff + patch`를 직접 구현한 최소 시연 프로젝트입니다.
+React 없이 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, `Virtual DOM diff + patch`를 직접 구현한 커스텀 React 코어 시연 프로젝트입니다.
 
-추가 문서: [중간 분석 보고서](./docs/INTERMEDIATE_REVIEW_REPORT.md)
+현재 시연 화면은 갤럭시 시계 앱의 스톱워치에서 영감을 받은 `스톱워치 + 구간 기록(lap)` 구조입니다.
+
+## 문서
+
+- [중간 분석 보고서](./docs/INTERMEDIATE_REVIEW_REPORT.md)
+- [시스템 구성도와 흐름도](./docs/FLOWCHARTS.md)
+- [자료구조 · 알고리즘 시각화](./docs/DS_ALGO_DIAGRAMS.md)
+- 브라우저용 문서
+  - `docs/FLOWCHARTS.html`
+  - `docs/DS_ALGO_DIAGRAMS.html`
 
 ## 실행
 
@@ -16,48 +25,58 @@ python -m http.server 4173
 
 ## 데모 구성
 
-- `Alpha Counter`, `Beta Counter`
-  - 상태는 모두 루트 컴포넌트에서만 관리
-  - 자식 컴포넌트는 props만 받는 순수 함수
-- `생명주기 타이머`
-  - `useEffect`로 interval 생성 / cleanup
-- `엔진 관찰 포인트`
-  - `renderCount`로 batching 결과 확인
-  - `useMemo`로 요약 정보 계산
+- `스톱워치`
+  - `시작`, `정지`, `초기화`
+  - `00:00.00` 형식의 메인 시간 표시
+- `구간 기록`
+  - 구간 버튼 클릭 시 랩 목록 누적
+  - `구간 / 구간기록 / 전체 시간` 표시
+  - 최신 랩, 빠른 랩, 느린 랩 강조
+- `커스텀 React 코어 시연 포인트`
+  - 루트 컴포넌트 상태 관리
+  - hooks 배열 기반 상태 유지
+  - `useEffect` interval 등록 / cleanup
+  - `useMemo` 랩 요약 계산
+  - VDOM diff / patch 기반 최소 DOM 갱신
+  - `queueMicrotask` 기반 batching
 
 ## 요구사항 대응
 
-- 함수형 컴포넌트: 모든 UI 조각을 함수로 분리
-- `FunctionComponent` 클래스:
+- 함수형 컴포넌트
+  - 모든 UI 조각을 함수형 컴포넌트로 구현
+- `FunctionComponent` 클래스
   - `hooks` 배열 보유
   - `mount()` 구현
   - `update()` 구현
-- Hooks:
+- Hooks
   - `useState`
   - `useEffect`
   - `useMemo`
-- Virtual DOM:
+- Virtual DOM
   - VNode 생성
   - 이전/현재 VDOM diff
   - patch만 실제 DOM 반영
-- 상태 관리 제약:
-  - 상태는 루트 컴포넌트 `App`에만 존재
-  - 자식 컴포넌트는 stateless props-only 구조
+- 상태 관리 제약
+  - 상태는 루트 컴포넌트 `RootApp`에만 존재
+  - 자식 컴포넌트 `StopwatchCard`는 stateless props-only 구조
 
 ## 핵심 파일
 
-- `src/core/vdom.js`
-  - VNode 생성
-  - DOM 생성
-  - diff / patch
-- `src/core/function-component.js`
-  - `FunctionComponent`
-  - `useState`, `useEffect`, `useMemo`
 - `src/app.js`
-  - 루트 상태 기반 시연 앱
-- `tests/`
+  - 앱 mount 진입점
+- `src/RootApp.js`
+  - 루트 상태, 핸들러, effect, memo, 화면 조립
+- `src/components/StopwatchCard.js`
+  - props-only UI 컴포넌트
+- `src/utils/formatStopwatch.js`
+  - 시간 포맷 유틸
+- `src/core/function-component/*`
+  - `FunctionComponent`, hooks 런타임
+- `src/core/vdom/*`
+  - VNode 생성, diff, patch, DOM 변환
+- `tests/*`
   - 엔진 단위 테스트 + 앱 통합 테스트
 
 ## 발표용 한 줄 설명
 
-`setState`는 값만 바꾸는 것이 아니라, 같은 tick의 상태 변경을 모아 두고 루트 컴포넌트를 다시 실행한 뒤 이전 VDOM과 비교해서 바뀐 DOM만 patch합니다.
+`setState`는 값만 바꾸는 것이 아니라, update를 microtask로 예약해 같은 동기 구간의 상태 변경을 묶고, 루트 컴포넌트를 다시 실행해 새 VDOM을 만든 뒤 이전 VDOM과 비교해서 바뀐 DOM만 patch합니다.

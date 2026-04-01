@@ -35,29 +35,26 @@ test("app flow reacts to clicks and timer effect", async () => {
   const { mountApp } = await import("../src/app.js");
   const app = mountApp(document.querySelector("#app"));
 
-  assert.match(document.body.textContent, /카운트 1/);
-  assert.match(document.body.textContent, /카운트 2/);
-  assert.match(document.body.textContent, /시계/);
+  assert.match(document.body.textContent, /Custom React Stopwatch/);
+  assert.match(document.body.textContent, /구간기록|구간 기록/);
 
-  click(findButtonByText("+1"));
+  click(findButtonByText("시작"));
+  await new Promise((resolve) => setTimeout(resolve, 120));
+
+  click(findButtonByText("구간 기록"));
   await Promise.resolve();
 
-  click(document.querySelectorAll(".primary-button")[1]);
+  assert.ok(document.querySelectorAll(".lap-row").length >= 1);
+  assert.match(document.body.textContent, /01/);
+
+  click(findButtonByText("정지"));
   await Promise.resolve();
 
-  const valuesAfterClicks = [...document.querySelectorAll(".counter-value")].map(
-    (node) => node.textContent.trim(),
-  );
-  assert.deepEqual(valuesAfterClicks, ["1", "1"]);
-
-  click(findButtonByText("Start"));
-  await new Promise((resolve) => setTimeout(resolve, 1100));
-
-  const timerValue = document.querySelector(".timer-value").textContent.trim();
-  assert.equal(timerValue, "00:01");
-
-  click(findButtonByText("Pause"));
+  click(findButtonByText("초기화"));
   await Promise.resolve();
+
+  assert.equal(document.querySelectorAll(".lap-row").length, 0);
+  assert.match(document.body.textContent, /00:00.00/);
 
   app.unmount();
   dom.window.close();

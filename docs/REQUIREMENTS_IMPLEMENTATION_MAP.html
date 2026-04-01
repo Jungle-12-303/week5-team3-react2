@@ -177,12 +177,12 @@
         <h1>과제 요구사항 · 구현 매핑 문서</h1>
         <p>
           이 문서는 현재 저장소가 과제 요구사항을 어떻게 충족하는지, 그리고
-          <span class="highlight">Week 3 Virtual DOM을 어떻게 가져와 현재 구조로 확장했는지</span>
+          <span class="highlight">Week 4 Virtual DOM을 어떻게 가져와 현재 구조로 확장했는지</span>
           를 한 번에 설명하기 위한 발표용 자료입니다.
         </p>
         <div class="chip-row">
           <div class="chip">Requirement Checklist</div>
-          <div class="chip">Week 3 VDOM Reuse</div>
+          <div class="chip">Week 4 VDOM Reuse</div>
           <div class="chip">Hooks Runtime Added</div>
           <div class="chip">Stopwatch Demo</div>
         </div>
@@ -193,7 +193,7 @@
           <h2>1. 한 장 요약</h2>
           <pre class="mermaid">
 flowchart TD
-    A["Week 3 Virtual DOM 엔진"] --> B["현재 저장소의 VDOM 모듈 구조"]
+    A["Week 4 Virtual DOM 엔진"] --> B["현재 저장소의 VDOM 모듈 구조"]
     B --> C["FunctionComponent 런타임 추가"]
     C --> D["useState / useEffect / useMemo 추가"]
     D --> E["루트 상태 기반 스톱워치 앱"]
@@ -213,7 +213,7 @@ flowchart TD
     A --> G["Virtual DOM + Diff + Patch"]
     A --> H["브라우저에서 동작하는 시연 페이지"]
     A --> I["단위 테스트 + 기능 테스트"]
-    A --> J["Week 3 VDOM 활용"]
+    A --> J["Week 4 VDOM 활용"]
 
     B --> B1["RootApp / StopwatchCard"]
     C --> C1["hooks 배열 / mount / update / unmount / scheduleUpdate"]
@@ -253,7 +253,7 @@ flowchart TD
 
         <div class="subgrid">
           <section>
-            <h2>4. "Week 3 VDOM을 가져와 확장했다"는 말의 정확한 의미</h2>
+            <h2>4. "Week 4 VDOM을 가져와 확장했다"는 말의 정확한 의미</h2>
             <div class="quote">
               이전 프로젝트의 VDOM 핵심 구조를 기반으로 현재 저장소의 VDOM 모듈을 재구성했고,
               그 위에 FunctionComponent와 Hooks 런타임을 새로 얹어 React 형태로 확장했습니다.
@@ -271,7 +271,7 @@ flowchart TD
             <h2>5. 이전 프로젝트에서 가져온 것과 새로 추가한 것</h2>
             <pre class="mermaid">
 flowchart LR
-    A["이전 Week 3 VDOM"] --> B["가져온 핵심"]
+    A["이전 Week 4 VDOM"] --> B["가져온 핵심"]
     B --> B1["VNode 구조"]
     B --> B2["domNodeToVNode / domToVNode"]
     B --> B3["diff / diffChildren"]
@@ -340,7 +340,7 @@ flowchart TD
           <section>
             <h2>9. 발표에서 이렇게 말하면 안전함</h2>
             <div class="quote">
-              Week 3에서 만든 Virtual DOM 엔진의 핵심 구조와 diff/patch 흐름을 기반으로 현재 저장소의
+              Week 4에서 만든 Virtual DOM 엔진의 핵심 구조와 diff/patch 흐름을 기반으로 현재 저장소의
               VDOM 모듈을 재구성했습니다. 그리고 이번 과제에서는 그 위에
               <code>FunctionComponent</code>, <code>useState</code>, <code>useEffect</code>, <code>useMemo</code>,
               microtask batching을 추가해 React 형태의 런타임으로 확장했습니다.

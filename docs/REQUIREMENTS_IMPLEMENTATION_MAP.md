@@ -1,13 +1,13 @@
 # 과제 요구사항 · 구현 매핑 문서
 
 이 문서는 수요 코딩회 과제 요구사항을 기준으로,  
-현재 저장소가 **무엇을 구현했고**, **어떻게 구현했고**, **Week 3 Virtual DOM을 어떻게 가져와 확장했는지**를 한눈에 볼 수 있게 정리한 문서입니다.
+현재 저장소가 **무엇을 구현했고**, **어떻게 구현했고**, **Week 4 Virtual DOM을 어떻게 가져와 확장했는지**를 한눈에 볼 수 있게 정리한 문서입니다.
 
 ## 1. 한 장 요약
 
 ```mermaid
 flowchart TD
-    A["Week 3 Virtual DOM 엔진"] --> B["현재 저장소의 VDOM 모듈 구조"]
+    A["Week 4 Virtual DOM 엔진"] --> B["현재 저장소의 VDOM 모듈 구조"]
     B --> C["FunctionComponent 런타임 추가"]
     C --> D["useState / useEffect / useMemo 추가"]
     D --> E["루트 상태 기반 스톱워치 앱"]
@@ -26,7 +26,7 @@ flowchart TD
     A --> G["Virtual DOM + Diff + Patch"]
     A --> H["브라우저에서 동작하는 시연 페이지"]
     A --> I["단위 테스트 + 기능 테스트"]
-    A --> J["Week 3 VDOM 활용"]
+    A --> J["Week 4 VDOM 활용"]
 
     B --> B1["RootApp / StopwatchCard"]
     C --> C1["hooks 배열 / mount / update / unmount / scheduleUpdate"]
@@ -57,7 +57,7 @@ flowchart TD
 | 단위 테스트 | hooks, diff/patch | `tests/function-component.test.js`, `tests/vdom.test.js` |
 | 기능 테스트 | 실제 클릭/타이머 흐름 | `tests/app.test.js` |
 
-## 4. "Week 3 VDOM을 가져와 확장했다"는 말의 정확한 의미
+## 4. "Week 4 VDOM을 가져와 확장했다"는 말의 정확한 의미
 
 이 부분은 발표에서 가장 정확하게 말해야 하는 부분입니다.
 
@@ -77,7 +77,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    A["이전 Week 3 VDOM"] --> B["가져온 핵심"]
+    A["이전 Week 4 VDOM"] --> B["가져온 핵심"]
     B --> B1["VNode 구조"]
     B --> B2["domNodeToVNode / domToVNode"]
     B --> B3["diff / diffChildren"]
@@ -146,7 +146,7 @@ flowchart TD
 
 ### 추천 표현
 
-> Week 3에서 만든 Virtual DOM 엔진의 핵심 구조와 diff/patch 흐름을 기반으로 현재 저장소의 VDOM 모듈을 재구성했습니다. 그리고 이번 과제에서는 그 위에 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, microtask batching을 추가해 React 형태의 런타임으로 확장했습니다.
+> Week 4에서 만든 Virtual DOM 엔진의 핵심 구조와 diff/patch 흐름을 기반으로 현재 저장소의 VDOM 모듈을 재구성했습니다. 그리고 이번 과제에서는 그 위에 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, microtask batching을 추가해 React 형태의 런타임으로 확장했습니다.
 
 ### 피하면 좋은 표현
 
@@ -188,4 +188,4 @@ flowchart TD
 
 ## 11. 최종 한 줄 요약
 
-> 이 프로젝트는 **Week 3 Virtual DOM 코어를 기반으로 현재 저장소의 VDOM 엔진을 모듈화하고, 그 위에 FunctionComponent와 Hooks 런타임을 추가해 스톱워치 시연 앱으로 확장한 커스텀 React 코어 구현**입니다.
+> 이 프로젝트는 **Week 4 Virtual DOM 코어를 기반으로 현재 저장소의 VDOM 엔진을 모듈화하고, 그 위에 FunctionComponent와 Hooks 런타임을 추가해 스톱워치 시연 앱으로 확장한 커스텀 React 코어 구현**입니다.

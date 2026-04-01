@@ -5,7 +5,7 @@
 
 ## 1. 프로젝트 한 줄 요약
 
-Week 3의 Virtual DOM 엔진을 기반으로, Week 5 과제 요구사항인 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, 루트 상태 관리, diff/patch 기반 업데이트를 직접 얹어 만든 커스텀 React 코어 MVP입니다.
+Week 4의 Virtual DOM 엔진을 기반으로, Week 5 과제 요구사항인 `FunctionComponent`, `useState`, `useEffect`, `useMemo`, 루트 상태 관리, diff/patch 기반 업데이트를 직접 얹어 만든 커스텀 React 코어 MVP입니다.
 
 최종 시연 UI는 다음 3개 섹션으로 고정되어 있습니다.
 
@@ -83,7 +83,7 @@ Week 3의 Virtual DOM 엔진을 기반으로, Week 5 과제 요구사항인 `Fun
 
 발표용으로는 아래처럼 설명하는 것이 가장 정확합니다.
 
-> Week 3에서 만든 Virtual DOM 엔진을 기반으로 diff/patch 코어를 재사용했고, 이번 과제에서는 그 위에 FunctionComponent와 Hooks 런타임을 추가해 React 형태로 확장했습니다.
+> Week 4에서 만든 Virtual DOM 엔진을 기반으로 diff/patch 코어를 재사용했고, 이번 과제에서는 그 위에 FunctionComponent와 Hooks 런타임을 추가해 React 형태로 확장했습니다.
 
 즉,
 
@@ -169,7 +169,7 @@ Week 3의 Virtual DOM 엔진을 기반으로, Week 5 과제 요구사항인 `Fun
 
 ### 이전 프로젝트 활용 관점
 
-> Week 3에서 만든 Virtual DOM 엔진의 diff/patch 코어를 재사용하고, 이번에는 그 위에 FunctionComponent와 Hooks를 추가해 React처럼 확장했습니다.
+> Week 4에서 만든 Virtual DOM 엔진의 diff/patch 코어를 재사용하고, 이번에는 그 위에 FunctionComponent와 Hooks를 추가해 React처럼 확장했습니다.
 
 ### 자료구조/알고리즘 관점
 

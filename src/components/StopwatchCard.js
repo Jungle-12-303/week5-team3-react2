@@ -1,6 +1,19 @@
 import { h } from "../core/vdom.js";
 import { formatStopwatch } from "../utils/formatStopwatch.js";
 
+function renderTimeSlots(timeText, slotClassName) {
+  return timeText.split("").map((char, index) =>
+    h(
+      "span",
+      {
+        className: char >= "0" && char <= "9" ? `${slotClassName} digit-slot` : `${slotClassName} separator-slot`,
+        key: `${char}-${index}`,
+      },
+      char,
+    ),
+  );
+}
+
 function getLapRowClass(index, fastestLapId, slowestLapId, lapId) {
   if (index === 0) {
     return "lap-row latest-lap";
@@ -27,36 +40,12 @@ export function StopwatchCard({
   onPrimaryAction,
   onSecondaryAction,
 }) {
+  const elapsedTimeText = formatStopwatch(elapsedMs);
+  const latestLapText = laps.length ? formatStopwatch(latestLapMs) : "00:00.00";
+
   return h(
     "section",
     { className: "stopwatch-shell" },
-    h("p", { className: "eyebrow-label" }, "Custom React Stopwatch"),
-    h("p", { className: "main-time" }, formatStopwatch(elapsedMs)),
-    h(
-      "p",
-      { className: "sub-time" },
-      laps.length ? formatStopwatch(latestLapMs) : "00:00.00",
-    ),
-    h(
-      "div",
-      { className: "stopwatch-actions" },
-      h(
-        "button",
-        {
-          className: "secondary-action",
-          onClick: onSecondaryAction,
-        },
-        running ? "구간 기록" : "초기화",
-      ),
-      h(
-        "button",
-        {
-          className: "primary-action",
-          onClick: onPrimaryAction,
-        },
-        running ? "정지" : "시작",
-      ),
-    ),
     h(
       "section",
       { className: "laps-panel" },
@@ -93,6 +82,33 @@ export function StopwatchCard({
             { className: "empty-laps" },
             "스톱워치를 시작하고 구간 기록을 눌러 랩 타임을 남겨보세요.",
           ),
+    ),
+    h(
+      "section",
+      { className: "timer-panel" },
+      h("p", { className: "eyebrow-label" }, "Custom React Stopwatch"),
+      h("p", { className: "main-time", "aria-label": elapsedTimeText }, ...renderTimeSlots(elapsedTimeText, "main-time-slot")),
+      h("p", { className: "sub-time", "aria-label": latestLapText }, ...renderTimeSlots(latestLapText, "sub-time-slot")),
+      h(
+        "div",
+        { className: "stopwatch-actions" },
+        h(
+          "button",
+          {
+            className: "secondary-action",
+            onClick: onSecondaryAction,
+          },
+          running ? "구간 기록" : "초기화",
+        ),
+        h(
+          "button",
+          {
+            className: "primary-action",
+            onClick: onPrimaryAction,
+          },
+          running ? "정지" : "시작",
+        ),
+      ),
     ),
   );
 }

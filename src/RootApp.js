@@ -3,6 +3,21 @@ import { h } from "./core/vdom.js";
 import { StopwatchCard } from "./components/StopwatchCard.js";
 
 export function RootApp() {
+  const [theme, setTheme] = useState(() => {
+    const storedTheme = window.localStorage?.getItem("stopwatch-theme");
+
+    if (storedTheme === "light" || storedTheme === "dark") {
+      return storedTheme;
+    }
+
+    if (typeof window.matchMedia === "function") {
+      return window.matchMedia("(prefers-color-scheme: light)").matches
+        ? "light"
+        : "dark";
+    }
+
+    return "dark";
+  });
   const [running, setRunning] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [startedAtMs, setStartedAtMs] = useState(null);
@@ -47,6 +62,11 @@ export function RootApp() {
     document.title = `Week5 Stopwatch | ${running ? "RUN" : "STOP"} ${elapsedMs}`;
   }, [running, elapsedMs]);
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage?.setItem("stopwatch-theme", theme);
+  }, [theme]);
+
   function handlePrimaryAction() {
     if (running) {
       setRunning(false);
@@ -77,9 +97,43 @@ export function RootApp() {
     setLaps((current) => [nextLap, ...current]);
   }
 
+  function handleThemeToggle() {
+    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
+  }
+
   return h(
     "main",
     { className: "page-shell" },
+    h(
+      "div",
+      { className: "page-toolbar" },
+      h(
+        "button",
+        {
+          className: `theme-toggle ${theme === "light" ? "light" : "dark"}`,
+          type: "button",
+          "aria-label": `${theme === "dark" ? "라이트" : "다크"} 모드로 전환`,
+          "aria-pressed": theme === "light" ? "true" : "false",
+          onClick: handleThemeToggle,
+        },
+        h("span", { className: "theme-toggle-track" }),
+        h(
+          "span",
+          { className: "theme-toggle-thumb", "aria-hidden": "true" },
+          theme === "light" ? "☀" : "☾",
+        ),
+        h(
+          "span",
+          { className: "theme-toggle-label theme-toggle-label-light" },
+          "Light",
+        ),
+        h(
+          "span",
+          { className: "theme-toggle-label theme-toggle-label-dark" },
+          "Dark",
+        ),
+      ),
+    ),
     StopwatchCard({
       running,
       elapsedMs,

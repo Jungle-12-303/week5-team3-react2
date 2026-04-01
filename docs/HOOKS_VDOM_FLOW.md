@@ -77,7 +77,34 @@ flowchart LR
 - 현재 구현에서는 그 저장소가 `FunctionComponent.hooks[]`입니다.
 - 훅은 이름이 아니라 **호출 순서**로 같은 슬롯을 다시 찾습니다.
 
-## 5. useState 단독 흐름
+## 5. Hook 상태 객체 구조
+
+```mermaid
+flowchart TD
+    A["hooks[]"] --> B["StateHook"]
+    A --> C["EffectHook"]
+    A --> D["MemoHook"]
+
+    B --> B1["kind = state"]
+    B --> B2["value"]
+    B --> B3["setState()"]
+
+    C --> C1["kind = effect"]
+    C --> C2["deps"]
+    C --> C3["cleanup"]
+
+    D --> D1["kind = memo"]
+    D --> D2["deps"]
+    D --> D3["value"]
+```
+
+### 해설
+
+- `useState`는 값과 `setState` 함수를 저장합니다.
+- `useEffect`는 마지막 deps와 cleanup 함수를 저장합니다.
+- `useMemo`는 마지막 deps와 캐시된 계산 결과를 저장합니다.
+
+## 6. useState 단독 흐름
 
 ```mermaid
 sequenceDiagram
@@ -106,19 +133,24 @@ sequenceDiagram
 - 상태를 바꾸고, 재렌더를 예약합니다.
 - 실제 화면 변경은 재렌더 이후 VDOM diff/patch 단계에서 일어납니다.
 
-## 6. useEffect 흐름
+## 7. useEffect 흐름
 
 ```mermaid
 flowchart TD
     A["컴포넌트 렌더"] --> B["useEffect(effect, deps)"]
-    B --> C["deps 비교"]
-    C -->|변경 없음| D["effect 재실행 안 함"]
-    C -->|변경 있음| E["pendingEffects[]에 적재"]
-    E --> F["VDOM diff/patch 완료"]
-    F --> G["flushEffects()"]
-    G --> H["기존 cleanup 실행"]
-    H --> I["새 effect 실행"]
-    I --> J["cleanup 저장"]
+    B --> C["기존 hook 존재?"]
+    C -->|없음| D["EffectHook 생성"]
+    D --> E["pendingEffects[]에 적재"]
+    C -->|있음| F["haveDepsChanged(previousDeps, nextDeps)"]
+    F -->|false| G["effect 재실행 안 함"]
+    F -->|true| H["deps 갱신"]
+    H --> I["pendingEffects[]에 적재"]
+    E --> J["VDOM diff/patch 완료"]
+    I --> J
+    J --> K["flushEffects()"]
+    K --> L["기존 cleanup 실행"]
+    L --> M["새 effect 실행"]
+    M --> N["cleanup 저장"]
 ```
 
 ### 이 프로젝트에서의 실제 예
@@ -129,16 +161,20 @@ flowchart TD
 - `title effect`
   - `running`, `elapsedMs`가 바뀌면 `document.title` 갱신
 
-## 7. useMemo 흐름
+## 8. useMemo 흐름
 
 ```mermaid
 flowchart TD
     A["컴포넌트 렌더"] --> B["useMemo(factory, deps)"]
-    B --> C["deps 비교"]
-    C -->|변경 없음| D["기존 memo.value 재사용"]
-    C -->|변경 있음| E["factory() 재실행"]
-    E --> F["memo.value 갱신"]
-    F --> G["현재 렌더 결과에 사용"]
+    B --> C["기존 hook 존재?"]
+    C -->|없음| D["MemoHook 생성"]
+    D --> E["factory() 실행"]
+    E --> F["memo.value 저장"]
+    C -->|있음| G["haveDepsChanged(previousDeps, nextDeps)"]
+    G -->|false| H["기존 memo.value 재사용"]
+    G -->|true| I["deps 갱신"]
+    I --> J["factory() 재실행"]
+    J --> K["memo.value 갱신"]
 ```
 
 ### 이 프로젝트에서의 실제 예
@@ -149,7 +185,26 @@ flowchart TD
   - slowest lap
 를 다시 계산합니다.
 
-## 8. Hook과 VDOM의 경계
+## 9. runtime.js와 utils.js의 역할
+
+```mermaid
+flowchart LR
+    A["runtime.js"] --> A1["currentInstance 저장"]
+    A --> A2["assertHookContext()"]
+    A --> A3["getCurrentInstance()"]
+    A --> A4["setCurrentInstance()"]
+
+    B["utils.js"] --> B1["haveDepsChanged()"]
+    B1 --> B2["deps 길이 비교"]
+    B1 --> B3["Object.is로 원소 비교"]
+```
+
+### 해설
+
+- `runtime.js`는 지금 어떤 `FunctionComponent`가 렌더 중인지 추적합니다.
+- `utils.js`는 `useEffect`, `useMemo`가 deps 변경 여부를 판단할 때 사용됩니다.
+
+## 10. Hook과 VDOM의 경계
 
 ```mermaid
 flowchart LR
@@ -169,7 +224,7 @@ flowchart LR
 - 훅이 직접 DOM을 수정하지는 않습니다.
 - VDOM이 상태를 저장하지도 않습니다.
 
-## 9. 이 프로젝트 코드에 대응시키면
+## 11. 이 프로젝트 코드에 대응시키면
 
 ```mermaid
 flowchart TD
@@ -183,6 +238,6 @@ flowchart TD
     H --> I["브라우저 DOM 갱신"]
 ```
 
-## 10. 발표용 한 줄 설명
+## 12. 발표용 한 줄 설명
 
 > 훅은 함수형 컴포넌트가 다시 실행돼도 이전 상태를 유지하게 해 주는 저장 규칙이고, Virtual DOM은 그 상태로 다시 만든 화면 트리를 이전 트리와 비교해 바뀐 부분만 실제 DOM에 반영하는 역할입니다.

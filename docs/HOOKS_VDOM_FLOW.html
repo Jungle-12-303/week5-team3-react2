@@ -154,15 +154,16 @@
         <div class="eyebrow">Hooks and Virtual DOM</div>
         <h1>Hooks · Virtual DOM 연결 흐름도</h1>
         <p>
-          이 문서는 <span class="highlight-blue">훅이 뭔지</span>,
-          <span class="highlight">훅이 Virtual DOM과 어떤 관계로 연결되는지</span>,
-          그리고 상태 변화가 실제 화면 갱신으로 어떻게 이어지는지를 시각적으로 설명합니다.
+          이 문서는 <span class="highlight-blue">훅이 무엇인지</span>,
+          <span class="highlight">useState / useEffect / useMemo가 각각 어떻게 동작하는지</span>,
+          그리고 그 결과가 Virtual DOM diff / patch로 어떻게 이어지는지를 설명합니다.
         </p>
         <div class="chip-row">
           <div class="chip">useState</div>
           <div class="chip">useEffect</div>
           <div class="chip">useMemo</div>
-          <div class="chip">scheduleUpdate</div>
+          <div class="chip">runtime.js</div>
+          <div class="chip">deps 비교</div>
           <div class="chip">diff / patch</div>
         </div>
       </div>
@@ -232,13 +233,35 @@ flowchart LR
     G --> H["useMemo(summary) -&gt; hooks[5]"]
     H --> I["useEffect(title) -&gt; hooks[6]"]
           </pre>
+        </section>
+
+        <section>
+          <h2>5. Hook 상태 객체 구조</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["hooks[]"] --> B["StateHook"]
+    A --> C["EffectHook"]
+    A --> D["MemoHook"]
+
+    B --> B1["kind = state"]
+    B --> B2["value"]
+    B --> B3["setState()"]
+
+    C --> C1["kind = effect"]
+    C --> C2["deps"]
+    C --> C3["cleanup"]
+
+    D --> D1["kind = memo"]
+    D --> D2["deps"]
+    D --> D3["value"]
+          </pre>
           <div class="notes">
-            <p>함수형 컴포넌트는 다시 실행될 때 지역변수가 새로 만들어지므로, 상태를 함수 밖 저장소에 따로 둬야 합니다. 현재 구현에서 그 저장소가 <code>hooks[]</code>입니다.</p>
+            <p>훅마다 저장하는 정보가 다르기 때문에, 같은 <code>hooks[]</code> 배열 안에 서로 다른 형태의 슬롯이 들어갑니다.</p>
           </div>
         </section>
 
         <section>
-          <h2>5. useState 단독 흐름</h2>
+          <h2>6. useState 단독 흐름</h2>
           <pre class="mermaid">
 sequenceDiagram
     participant U as User
@@ -259,45 +282,67 @@ sequenceDiagram
     V->>V: old/new diff
     V->>D: patch 적용
           </pre>
-          <div class="notes">
-            <p><code>useState</code>는 직접 DOM을 바꾸지 않습니다. 상태를 바꾸고, 재렌더를 예약합니다. 실제 화면 변경은 VDOM diff/patch 단계에서 일어납니다.</p>
-          </div>
         </section>
 
         <div class="subgrid">
           <section>
-            <h2>6. useEffect 흐름</h2>
+            <h2>7. useEffect 흐름</h2>
             <pre class="mermaid">
 flowchart TD
     A["컴포넌트 렌더"] --> B["useEffect(effect, deps)"]
-    B --> C["deps 비교"]
-    C -->|변경 없음| D["effect 재실행 안 함"]
-    C -->|변경 있음| E["pendingEffects[]에 적재"]
-    E --> F["VDOM diff/patch 완료"]
-    F --> G["flushEffects()"]
-    G --> H["기존 cleanup 실행"]
-    H --> I["새 effect 실행"]
-    I --> J["cleanup 저장"]
+    B --> C["기존 hook 존재?"]
+    C -->|없음| D["EffectHook 생성"]
+    D --> E["pendingEffects[]에 적재"]
+    C -->|있음| F["haveDepsChanged(previousDeps, nextDeps)"]
+    F -->|false| G["effect 재실행 안 함"]
+    F -->|true| H["deps 갱신"]
+    H --> I["pendingEffects[]에 적재"]
+    E --> J["VDOM diff/patch 완료"]
+    I --> J
+    J --> K["flushEffects()"]
+    K --> L["기존 cleanup 실행"]
+    L --> M["새 effect 실행"]
+    M --> N["cleanup 저장"]
             </pre>
           </section>
 
           <section>
-            <h2>7. useMemo 흐름</h2>
+            <h2>8. useMemo 흐름</h2>
             <pre class="mermaid">
 flowchart TD
     A["컴포넌트 렌더"] --> B["useMemo(factory, deps)"]
-    B --> C["deps 비교"]
-    C -->|변경 없음| D["기존 memo.value 재사용"]
-    C -->|변경 있음| E["factory() 재실행"]
-    E --> F["memo.value 갱신"]
-    F --> G["현재 렌더 결과에 사용"]
+    B --> C["기존 hook 존재?"]
+    C -->|없음| D["MemoHook 생성"]
+    D --> E["factory() 실행"]
+    E --> F["memo.value 저장"]
+    C -->|있음| G["haveDepsChanged(previousDeps, nextDeps)"]
+    G -->|false| H["기존 memo.value 재사용"]
+    G -->|true| I["deps 갱신"]
+    I --> J["factory() 재실행"]
+    J --> K["memo.value 갱신"]
             </pre>
           </section>
         </div>
 
-        <section>
-          <h2>8. Hook과 VDOM의 경계</h2>
-          <pre class="mermaid">
+        <div class="subgrid">
+          <section>
+            <h2>9. runtime.js와 utils.js의 역할</h2>
+            <pre class="mermaid">
+flowchart LR
+    A["runtime.js"] --> A1["currentInstance 저장"]
+    A --> A2["assertHookContext()"]
+    A --> A3["getCurrentInstance()"]
+    A --> A4["setCurrentInstance()"]
+
+    B["utils.js"] --> B1["haveDepsChanged()"]
+    B1 --> B2["deps 길이 비교"]
+    B1 --> B3["Object.is로 원소 비교"]
+            </pre>
+          </section>
+
+          <section>
+            <h2>10. Hook과 VDOM의 경계</h2>
+            <pre class="mermaid">
 flowchart LR
     A["Hook이 하는 일"] --> A1["상태 기억"]
     A --> A2["effect 등록"]
@@ -306,19 +351,12 @@ flowchart LR
     B["VDOM이 하는 일"] --> B1["새 화면 트리 생성"]
     B --> B2["이전 트리와 비교"]
     B --> B3["바뀐 DOM만 수정"]
-          </pre>
-          <div class="notes">
-            <ul>
-              <li>Hook은 상태 저장소에 가깝습니다.</li>
-              <li>VDOM은 렌더 결과 비교기에 가깝습니다.</li>
-              <li>Hook이 직접 DOM을 수정하지는 않습니다.</li>
-              <li>VDOM이 상태를 저장하지도 않습니다.</li>
-            </ul>
-          </div>
-        </section>
+            </pre>
+          </section>
+        </div>
 
         <section>
-          <h2>9. 이 프로젝트 코드에 대응시키면</h2>
+          <h2>11. 이 프로젝트 코드에 대응시키면</h2>
           <pre class="mermaid">
 flowchart TD
     A["src/core/function-component/hooks.js"] --> B["useState / useEffect / useMemo"]

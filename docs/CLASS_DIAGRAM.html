@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>클래스 다이어그램 문서</title>
+    <style>
+      :root {
+        --bg: #050608;
+        --panel: rgba(14, 16, 20, 0.88);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #f5f7fb;
+        --muted: #9ea7b7;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 40px 20px 96px;
+        color: var(--text);
+        font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(255, 115, 92, 0.14), transparent 26%),
+          radial-gradient(circle at 20% 20%, rgba(109, 135, 255, 0.1), transparent 22%),
+          linear-gradient(180deg, #090b10, var(--bg));
+      }
+      main { width: min(1280px, 100%); margin: 0 auto; }
+      .hero { margin-bottom: 28px; }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        line-height: 1.05;
+      }
+      .hero p {
+        max-width: 920px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+      }
+      .grid { display: grid; gap: 20px; }
+      section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+      h2 { margin: 0 0 14px; font-size: 1.2rem; }
+      pre.mermaid { margin: 0; overflow: auto; }
+      .notes {
+        margin-top: 14px;
+        color: var(--muted);
+        line-height: 1.72;
+        font-size: 0.96rem;
+      }
+    </style>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          background: "#0f1116",
+          primaryColor: "#171b22",
+          primaryTextColor: "#f5f7fb",
+          primaryBorderColor: "#4a5568",
+          lineColor: "#8b97ab",
+          secondaryColor: "#151922",
+          tertiaryColor: "#101319",
+          fontFamily: "Segoe UI, Apple SD Gothic Neo, sans-serif"
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow">Class Diagram</div>
+        <h1>클래스 다이어그램 문서</h1>
+        <p>이 프로젝트는 함수와 모듈 중심 구조이지만, 핵심 런타임 클래스와 구조체형 객체를 함께 보면 전체 설계가 훨씬 잘 보입니다.</p>
+      </div>
+
+      <div class="grid">
+        <section>
+          <h2>1. 런타임 클래스 다이어그램</h2>
+          <pre class="mermaid">
+classDiagram
+    class FunctionComponent {
+      +renderFn
+      +container
+      +props
+      +hooks[]
+      +hookIndex
+      +pendingEffects[]
+      +isMounted
+      +updateScheduled
+      +vnode
+      +dom
+      +renderCount
+      +mount()
+      +update()
+      +scheduleUpdate()
+      +unmount()
+    }
+
+    class StateHook {
+      +kind: "state"
+      +value
+      +setState()
+    }
+
+    class EffectHook {
+      +kind: "effect"
+      +deps[]
+      +cleanup()
+    }
+
+    class MemoHook {
+      +kind: "memo"
+      +deps[]
+      +value
+    }
+
+    class PendingEffect {
+      +hook
+      +effect()
+    }
+
+    FunctionComponent "1" *-- "*" StateHook
+    FunctionComponent "1" *-- "*" EffectHook
+    FunctionComponent "1" *-- "*" MemoHook
+    FunctionComponent "1" *-- "*" PendingEffect
+          </pre>
+        </section>
+
+        <section>
+          <h2>2. 앱 계층 다이어그램</h2>
+          <pre class="mermaid">
+classDiagram
+    class RootApp {
+      +running
+      +elapsedMs
+      +startedAtMs
+      +laps[]
+      +handlePrimaryAction()
+      +handleLapRecord()
+      +render()
+    }
+
+    class StopwatchCard {
+      +running
+      +elapsedMs
+      +latestLapMs
+      +laps[]
+      +fastestLapId
+      +slowestLapId
+      +onPrimaryAction()
+      +onSecondaryAction()
+      +render()
+    }
+
+    class Lap {
+      +id
+      +number
+      +lapMs
+      +totalMs
+    }
+
+    RootApp --> StopwatchCard : passes props
+    RootApp "1" *-- "*" Lap
+          </pre>
+        </section>
+
+        <section>
+          <h2>3. Virtual DOM 타입 다이어그램</h2>
+          <pre class="mermaid">
+classDiagram
+    class ElementVNode {
+      +type: "element"
+      +tag
+      +attrs
+      +children[]
+      +text
+      +key
+      +path
+      +depth
+    }
+
+    class TextVNode {
+      +type: "text"
+      +tag: null
+      +attrs
+      +children[]
+      +text
+      +key
+      +path
+      +depth
+    }
+
+    class Patch {
+      +type
+      +path
+    }
+
+    class CreatePatch {
+      +parentPath
+      +index
+      +node
+    }
+
+    class RemovePatch {
+      +parentPath
+      +index
+      +node
+    }
+
+    class ReplacePatch {
+      +oldNode
+      +newNode
+    }
+
+    class TextPatch {
+      +oldText
+      +newText
+    }
+
+    class AttrSetPatch {
+      +name
+      +value
+    }
+
+    class AttrRemovePatch {
+      +name
+    }
+
+    class ReorderChildrenPatch {
+      +parentPath
+      +order[]
+    }
+
+    ElementVNode "1" *-- "*" ElementVNode
+    ElementVNode "1" *-- "*" TextVNode
+    Patch <|-- CreatePatch
+    Patch <|-- RemovePatch
+    Patch <|-- ReplacePatch
+    Patch <|-- TextPatch
+    Patch <|-- AttrSetPatch
+    Patch <|-- AttrRemovePatch
+    Patch <|-- ReorderChildrenPatch
+          </pre>
+        </section>
+
+        <section>
+          <h2>4. 모듈 관계 다이어그램</h2>
+          <pre class="mermaid">
+classDiagram
+    class app_js {
+      +mountApp()
+    }
+
+    class RootApp_js {
+      +RootApp()
+    }
+
+    class StopwatchCard_js {
+      +StopwatchCard()
+    }
+
+    class function_component_js {
+      +FunctionComponent
+      +useState()
+      +useEffect()
+      +useMemo()
+    }
+
+    class hooks_js {
+      +useState()
+      +useEffect()
+      +useMemo()
+    }
+
+    class runtime_js {
+      +assertHookContext()
+      +getCurrentInstance()
+      +setCurrentInstance()
+    }
+
+    class vdom_js {
+      +h()
+      +diff()
+      +applyPatches()
+      +createDOMFromVNode()
+    }
+
+    class diff_js {
+      +diff()
+      +diffChildren()
+    }
+
+    class patch_js {
+      +applyPatches()
+    }
+
+    app_js --> function_component_js
+    app_js --> RootApp_js
+    RootApp_js --> StopwatchCard_js
+    RootApp_js --> function_component_js
+    RootApp_js --> vdom_js
+    StopwatchCard_js --> vdom_js
+    function_component_js --> hooks_js
+    hooks_js --> runtime_js
+    function_component_js --> vdom_js
+    vdom_js --> diff_js
+    vdom_js --> patch_js
+          </pre>
+          <div class="notes">`FunctionComponent`가 런타임 중심 클래스이고, 나머지는 모듈 또는 데이터 구조로 연결되는 형태입니다.</div>
+        </section>
+      </div>
+    </main>
+  </body>
+  </html>

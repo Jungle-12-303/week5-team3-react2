@@ -52,3 +52,35 @@ test("diff + patch creates and removes child nodes", () => {
   assert.equal(document.body.innerHTML, "<ul><li>A</li><li>C</li><li>D</li></ul>");
   dom.window.close();
 });
+
+test("diff keeps vnode inputs immutable and applies keyed reorders to the matched DOM nodes", () => {
+  const dom = installDom();
+
+  const oldTree = h(
+    "ul",
+    null,
+    h("li", { "data-key": "alpha" }, "Alpha"),
+    h("li", { "data-key": "beta" }, "Beta"),
+  );
+  const newTree = h(
+    "ul",
+    null,
+    h("li", { "data-key": "beta", "data-state": "active" }, "Beta!"),
+    h("li", { "data-key": "alpha" }, "Alpha"),
+  );
+
+  const mounted = createDOMFromVNode(oldTree);
+  document.body.appendChild(mounted);
+
+  const patches = diff(oldTree, newTree);
+  const nextRoot = applyPatches(mounted, patches, newTree);
+
+  assert.equal(oldTree.path, "");
+  assert.equal(oldTree.children[0].path, "");
+  assert.equal(newTree.children[0].key, null);
+  assert.equal(
+    nextRoot.outerHTML,
+    '<ul><li data-key="beta" data-state="active">Beta!</li><li data-key="alpha">Alpha</li></ul>',
+  );
+  dom.window.close();
+});

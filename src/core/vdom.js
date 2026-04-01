@@ -1,13 +1,155 @@
-const TEXT_NODE = "TEXT_NODE";
+/*
+  Unified Virtual DOM Engine Core
+  Base structure imported from the previous Week 2 VDOM project and adapted
+  for the Week 5 custom React runtime.
+*/
 
-export const PATCH_TYPES = Object.freeze({
+/* 1. Constants */
+export const NODE_TYPE = {
+  ELEMENT: 1,
+  TEXT: 3,
+  COMMENT: 8,
+};
+
+export const PATCH_TYPES = {
   CREATE: "CREATE",
   REMOVE: "REMOVE",
   REPLACE: "REPLACE",
   TEXT: "TEXT",
-  SET_PROP: "SET_PROP",
-  REMOVE_PROP: "REMOVE_PROP",
-});
+  ATTR_SET: "ATTR_SET",
+  ATTR_REMOVE: "ATTR_REMOVE",
+  REORDER_CHILDREN: "REORDER_CHILDREN",
+};
+
+function sanitizeText(text) {
+  return typeof text === "string" ? text.replace(/\s+/g, " ").trim() : "";
+}
+
+export function createRootContainer() {
+  return {
+    type: "element",
+    tag: "div",
+    attrs: { "data-virtual-root": "true" },
+    children: [],
+    text: "",
+    key: "__root__",
+    path: "0",
+    depth: 0,
+  };
+}
+
+function buildKey(attrs, fallbackKey) {
+  if (!attrs) {
+    return fallbackKey;
+  }
+  return attrs["data-key"] || attrs.key || attrs.id || fallbackKey;
+}
+
+export function serializeHTML(node) {
+  return node ? node.innerHTML.trim() : "";
+}
+
+export function safelyParseHTML(html) {
+  const template = document.createElement("template");
+  try {
+    template.innerHTML = html && html.trim() ? html.trim() : "";
+  } catch (error) {
+    return { fragment: template.content, error };
+  }
+  return { fragment: template.content, error: null };
+}
+
+export function renderHTMLIntoTarget(target, html) {
+  const { fragment, error } = safelyParseHTML(html);
+  target.innerHTML = "";
+  if (fragment.childNodes.length) {
+    target.appendChild(fragment.cloneNode(true));
+  }
+  return error;
+}
+
+export function isComparableDomNode(node) {
+  if (!node) {
+    return false;
+  }
+  if (node.nodeType === NODE_TYPE.COMMENT) {
+    return false;
+  }
+  if (node.nodeType === NODE_TYPE.TEXT) {
+    return Boolean((node.textContent || "").trim());
+  }
+  return node.nodeType === NODE_TYPE.ELEMENT;
+}
+
+export function getComparableChildNodes(node) {
+  return Array.from(node.childNodes || []).filter((child) =>
+    isComparableDomNode(child),
+  );
+}
+
+function pathToSegments(path) {
+  return String(path)
+    .split("-")
+    .slice(1)
+    .map((segment) => Number(segment))
+    .filter((segment) => Number.isInteger(segment));
+}
+
+function getPathDepth(path) {
+  return String(path).split("-").length;
+}
+
+export function countNodes(vNode) {
+  if (!vNode) {
+    return 0;
+  }
+  return (
+    1 +
+    (vNode.children || []).reduce((total, child) => total + countNodes(child), 0)
+  );
+}
+
+export function calculateMaxDepth(vNode) {
+  if (!vNode) {
+    return 0;
+  }
+  if (!vNode.children || !vNode.children.length) {
+    return vNode.depth || 0;
+  }
+  return Math.max(...vNode.children.map((child) => calculateMaxDepth(child)));
+}
+
+export function getNodeDescriptor(vNode) {
+  if (!vNode) {
+    return "null";
+  }
+  if (vNode.type === "text") {
+    return `#text("${sanitizeText(vNode.text)}")`;
+  }
+  return `<${vNode.tag}>`;
+}
+
+export function getReadableNodeSummary(vNode) {
+  if (!vNode) {
+    return "empty";
+  }
+  if (vNode.type === "text") {
+    return `text:${sanitizeText(vNode.text) || "(blank)"}`;
+  }
+  return `${vNode.tag} | attrs:${Object.keys(vNode.attrs || {}).length} | children:${(vNode.children || []).length}`;
+}
+
+export function getDomKey(node, index) {
+  if (!node || node.nodeType !== NODE_TYPE.ELEMENT) {
+    return `__index_${index}`;
+  }
+  return (
+    node.getAttribute("data-key") ||
+    node.getAttribute("key") ||
+    node.id ||
+    `__index_${index}`
+  );
+}
 
 function flattenChildren(children, bucket = []) {
   for (const child of children) {
@@ -20,8 +162,12 @@ function flattenChildren(children, bucket = []) {
       continue;
     }
 
-    if (typeof child === "string" || typeof child === "number") {
-      bucket.push(createTextVNode(child));
+    if (
+      typeof child === "string" ||
+      typeof child === "number" ||
+      typeof child === "boolean"
+    ) {
+      bucket.push(createTextVNode(String(child)));
       continue;
     }
 
@@ -31,314 +177,621 @@ function flattenChildren(children, bucket = []) {
   return bucket;
 }
 
-export function createTextVNode(value) {
+function normalizeAttrs(attrs = {}) {
+  const normalized = { ...attrs };
+
+  if ("className" in normalized) {
+    normalized.class = normalized.className;
+    delete normalized.className;
+  }
+
+  return normalized;
+}
+
+export function h(tag, attrs = {}, ...children) {
+  return createElementVNode(tag, normalizeAttrs(attrs), flattenChildren(children));
+}
+
+/* -------------------------------------------------------------------------- */
+/* 4. virtual dom utils                                                        */
+/* -------------------------------------------------------------------------- */
+
+export function createElementVNode(tag, attrs = {}, children = []) {
   return {
-    type: TEXT_NODE,
-    text: String(value),
-    props: {},
+    type: "element",
+    tag,
+    attrs,
+    children: children.map((child) =>
+      typeof child === "string" ? createTextVNode(child) : child,
+    ),
+    text: "",
+    key: null,
+    path: "",
+    depth: 0,
+  };
+}
+
+export function createTextVNode(text) {
+  return {
+    type: "text",
+    tag: null,
+    attrs: {},
     children: [],
+    text: String(text ?? ""),
+    key: null,
+    path: "",
+    depth: 0,
   };
 }
 
-export function h(type, props = {}, ...children) {
+/*
+  이 함수의 역할:
+  실제 DOM 노드를 Virtual DOM 객체 트리로 변환한다.
+*/
+export function domNodeToVNode(node, path, depth) {
+  if (!node) {
+    return null;
+  }
+  if (node.nodeType === NODE_TYPE.COMMENT) {
+    return null;
+  }
+  if (node.nodeType === NODE_TYPE.TEXT) {
+    const rawText = node.textContent || "";
+    if (!rawText.trim()) {
+      return null;
+    }
+    return {
+      type: "text",
+      tag: null,
+      attrs: {},
+      children: [],
+      text: rawText,
+      key: null,
+      path,
+      depth,
+    };
+  }
+  if (node.nodeType !== NODE_TYPE.ELEMENT) {
+    return null;
+  }
+  const attrs = {};
+  Array.from(node.attributes || []).forEach((attribute) => {
+    attrs[attribute.name] = attribute.value === "" ? true : attribute.value;
+  });
+  const children = [];
+  let childIndex = 0;
+  Array.from(node.childNodes || []).forEach((child) => {
+    const childVNode = domNodeToVNode(child, `${path}-${childIndex}`, depth + 1);
+    if (childVNode) {
+      children.push(childVNode);
+      childIndex += 1;
+    }
+  });
   return {
-    type,
-    props: props ?? {},
-    children: flattenChildren(children),
+    type: "element",
+    tag: node.tagName.toLowerCase(),
+    attrs,
+    children,
+    text: "",
+    key: buildKey(attrs, `${node.tagName.toLowerCase()}-${path}`),
+    path,
+    depth,
   };
 }
 
-function isTextVNode(vnode) {
-  return vnode?.type === TEXT_NODE;
+/*
+  이 함수의 역할:
+  DOM 컨테이너의 자식들을 읽어서 루트 래퍼 Virtual DOM으로 변환한다.
+*/
+export function domToVNode(container) {
+  const root = createRootContainer();
+  let childIndex = 0;
+  Array.from(container.childNodes || []).forEach((child) => {
+    const childVNode = domNodeToVNode(child, `0-${childIndex}`, 1);
+    if (childVNode) {
+      root.children.push(childVNode);
+      childIndex += 1;
+    }
+  });
+  return root;
 }
 
-function isEventProp(name) {
+export function normalizeVNodePaths(vNode, path = "0", depth = 0) {
+  if (!vNode) {
+    return null;
+  }
+  vNode.path = path;
+  vNode.depth = depth;
+  if (vNode.type === "element") {
+    vNode.key = buildKey(vNode.attrs, `${vNode.tag}-${path}`);
+  }
+  (vNode.children || []).forEach((child, index) => {
+    normalizeVNodePaths(child, `${path}-${index}`, depth + 1);
+  });
+  return vNode;
+}
+
+function isEventAttribute(name) {
   return name.startsWith("on");
 }
 
-function normalizePropName(name) {
-  return name === "className" ? "class" : name;
-}
+function setEventListener(element, name, handler) {
+  const eventName = name.slice(2).toLowerCase();
+  const listeners = element.__vdomListeners || {};
+  const previous = listeners[eventName];
 
-function setEvent(domNode, eventName, nextHandler) {
-  const store = domNode.__listeners ?? {};
-  const previousHandler = store[eventName];
-
-  if (previousHandler) {
-    domNode.removeEventListener(eventName, previousHandler);
+  if (previous) {
+    element.removeEventListener(eventName, previous);
   }
 
-  if (typeof nextHandler === "function") {
-    domNode.addEventListener(eventName, nextHandler);
-    store[eventName] = nextHandler;
+  if (typeof handler === "function") {
+    element.addEventListener(eventName, handler);
+    listeners[eventName] = handler;
   } else {
-    delete store[eventName];
+    delete listeners[eventName];
   }
 
-  domNode.__listeners = store;
+  element.__vdomListeners = listeners;
 }
 
-function setDomProp(domNode, name, value) {
+function setDomAttribute(element, name, value) {
   if (name === "key" || name === "children") {
     return;
   }
 
-  if (isEventProp(name)) {
-    setEvent(domNode, name.slice(2).toLowerCase(), value);
-    return;
-  }
-
-  if (name === "className") {
-    domNode.setAttribute("class", value ?? "");
+  if (isEventAttribute(name)) {
+    setEventListener(element, name, value);
     return;
   }
 
   if (name === "value") {
-    domNode.value = value ?? "";
-    return;
+    element.value = value ?? "";
   }
 
   if (name === "checked") {
-    domNode.checked = Boolean(value);
-    if (!value) {
-      domNode.removeAttribute("checked");
-    } else {
-      domNode.setAttribute("checked", "");
-    }
+    element.checked = Boolean(value);
+  }
+
+  if (value === true) {
+    element.setAttribute(name, "");
     return;
   }
 
   if (value === false || value === null || value === undefined) {
-    domNode.removeAttribute(normalizePropName(name));
+    element.removeAttribute(name);
     return;
   }
 
-  if (value === true) {
-    domNode.setAttribute(normalizePropName(name), "");
-    return;
-  }
-
-  domNode.setAttribute(normalizePropName(name), String(value));
+  element.setAttribute(name, String(value));
 }
 
-function removeDomProp(domNode, name) {
+function removeDomAttribute(element, name) {
   if (name === "key" || name === "children") {
     return;
   }
 
-  if (isEventProp(name)) {
-    setEvent(domNode, name.slice(2).toLowerCase(), null);
+  if (isEventAttribute(name)) {
+    setEventListener(element, name, null);
     return;
   }
 
   if (name === "value") {
-    domNode.value = "";
-    return;
+    element.value = "";
   }
 
   if (name === "checked") {
-    domNode.checked = false;
+    element.checked = false;
   }
 
-  domNode.removeAttribute(normalizePropName(name));
+  element.removeAttribute(name);
 }
 
-export function createDOMFromVNode(vnode) {
-  if (isTextVNode(vnode)) {
-    return document.createTextNode(vnode.text);
+/*
+  이 함수의 역할:
+  Virtual DOM 객체 하나를 실제 DOM 노드로 생성한다.
+*/
+export function createDOMFromVNode(vNode) {
+  if (!vNode) {
+    return document.createTextNode("");
   }
-
-  const element = document.createElement(vnode.type);
-
-  for (const [name, value] of Object.entries(vnode.props ?? {})) {
-    setDomProp(element, name, value);
+  if (vNode.type === "text") {
+    return document.createTextNode(vNode.text || "");
   }
-
-  for (const child of vnode.children ?? []) {
-    element.appendChild(createDOMFromVNode(child));
-  }
-
+  const element = document.createElement(vNode.tag);
+  Object.entries(vNode.attrs || {}).forEach(([name, value]) => {
+    setDomAttribute(element, name, value);
+  });
+  (vNode.children || []).forEach((child) =>
+    element.appendChild(createDOMFromVNode(child)),
+  );
   return element;
 }
 
-function diffProps(oldProps, newProps, path, patches) {
-  const oldKeys = Object.keys(oldProps ?? {});
-  const newKeys = Object.keys(newProps ?? {});
-  const allKeys = new Set([...oldKeys, ...newKeys]);
+export function renderVNodeToRoot(root, vNode) {
+  root.innerHTML = "";
+  (vNode.children || []).forEach((child) =>
+    root.appendChild(createDOMFromVNode(child)),
+  );
+}
 
-  for (const key of allKeys) {
-    const oldValue = oldProps?.[key];
-    const newValue = newProps?.[key];
+export function findVNodeByPath(vNode, path) {
+  if (!vNode) {
+    return null;
+  }
+  if (vNode.path === path) {
+    return vNode;
+  }
+  for (const child of vNode.children || []) {
+    const found = findVNodeByPath(child, path);
+    if (found) {
+      return found;
+    }
+  }
+  return null;
+}
 
-    if (!(key in (newProps ?? {}))) {
+/* -------------------------------------------------------------------------- */
+/* 5. traversal utils                                                          */
+/* -------------------------------------------------------------------------- */
+
+export function traverseDFS(root) {
+  const order = [];
+  function visit(node) {
+    if (!node) {
+      return;
+    }
+    order.push({
+      path: node.path,
+      label: getNodeDescriptor(node),
+      depth: node.depth,
+    });
+    (node.children || []).forEach((child) => visit(child));
+  }
+  visit(root);
+  return order;
+}
+
+export function traverseBFS(root) {
+  if (!root) {
+    return [];
+  }
+  const order = [];
+  const queue = [root];
+  while (queue.length) {
+    const current = queue.shift();
+    order.push({
+      path: current.path,
+      label: getNodeDescriptor(current),
+      depth: current.depth,
+    });
+    (current.children || []).forEach((child) => queue.push(child));
+  }
+  return order;
+}
+
+/* -------------------------------------------------------------------------- */
+/* 6. diff engine                                                              */
+/* -------------------------------------------------------------------------- */
+
+function diffAttrs(oldAttrs = {}, newAttrs = {}, path, patches) {
+  Object.keys(newAttrs).forEach((name) => {
+    if (!Object.is(oldAttrs[name], newAttrs[name])) {
       patches.push({
-        type: PATCH_TYPES.REMOVE_PROP,
+        type: PATCH_TYPES.ATTR_SET,
         path,
-        name: key,
+        name,
+        value: newAttrs[name],
       });
-      continue;
+    }
+  });
+  Object.keys(oldAttrs).forEach((name) => {
+    if (!(name in newAttrs)) {
+      patches.push({ type: PATCH_TYPES.ATTR_REMOVE, path, name });
+    }
+  });
+}
+
+function createChildKeyMap(children) {
+  const map = new Map();
+  children.forEach((child, index) => {
+    map.set(child.key || `__index_${index}`, index);
+  });
+  return map;
+}
+
+/*
+  이 함수의 역할:
+  두 자식 배열을 비교해 생성, 삭제, 재정렬, 하위 diff를 계산한다.
+*/
+function diffChildren(oldChildren, newChildren, parentPath, patches) {
+  const oldKeyMap = createChildKeyMap(oldChildren);
+  const newKeyMap = createChildKeyMap(newChildren);
+  const nextOrder = [];
+
+  newChildren.forEach((newChild, index) => {
+    const lookupKey = newChild.key || `__index_${index}`;
+    nextOrder.push(lookupKey);
+
+    if (!oldKeyMap.has(lookupKey)) {
+      patches.push({
+        type: PATCH_TYPES.CREATE,
+        path: `${parentPath}-${index}`,
+        parentPath,
+        index,
+        node: newChild,
+      });
+      return;
     }
 
-    if (!Object.is(oldValue, newValue)) {
+    const oldIndex = oldKeyMap.get(lookupKey);
+    diffInternal(oldChildren[oldIndex], newChild, `${parentPath}-${index}`, patches);
+  });
+
+  oldChildren.forEach((oldChild, index) => {
+    const lookupKey = oldChild.key || `__index_${index}`;
+    if (!newKeyMap.has(lookupKey)) {
       patches.push({
-        type: PATCH_TYPES.SET_PROP,
-        path,
-        name: key,
-        value: newValue,
+        type: PATCH_TYPES.REMOVE,
+        path: oldChild.path || `${parentPath}-${index}`,
+        parentPath,
+        index,
+        node: oldChild,
       });
     }
+  });
+
+  const previousOrder = oldChildren.map(
+    (child, index) => child.key || `__index_${index}`,
+  );
+  if (
+    previousOrder.length === nextOrder.length &&
+    previousOrder.join("|") !== nextOrder.join("|")
+  ) {
+    patches.push({
+      type: PATCH_TYPES.REORDER_CHILDREN,
+      path: parentPath,
+      parentPath,
+      order: nextOrder,
+    });
   }
 }
 
-function walkDiff(oldVNode, newVNode, path, patches) {
-  if (!oldVNode && newVNode) {
+/*
+  이 함수의 역할:
+  이전 Virtual DOM과 새로운 Virtual DOM을 비교해 patch 목록을 만든다.
+*/
+function diffInternal(oldNode, newNode, path = "0", patches = []) {
+  if (!oldNode && newNode) {
     patches.push({
       type: PATCH_TYPES.CREATE,
-      parentPath: path.slice(0, -1),
-      index: path.at(-1) ?? 0,
-      node: newVNode,
+      path,
+      parentPath: path.split("-").slice(0, -1).join("-") || "0",
+      index: Number(path.split("-").pop() || 0),
+      node: newNode,
     });
-    return;
+    return patches;
   }
 
-  if (oldVNode && !newVNode) {
+  if (oldNode && !newNode) {
     patches.push({
       type: PATCH_TYPES.REMOVE,
       path,
+      parentPath: path.split("-").slice(0, -1).join("-") || "0",
+      index: Number(path.split("-").pop() || 0),
+      node: oldNode,
     });
-    return;
+    return patches;
   }
 
-  if (oldVNode.type !== newVNode.type) {
-    patches.push({
-      type: PATCH_TYPES.REPLACE,
-      path,
-      node: newVNode,
-    });
-    return;
+  if (!oldNode || !newNode) {
+    return patches;
   }
 
-  if (isTextVNode(oldVNode) && isTextVNode(newVNode)) {
-    if (oldVNode.text !== newVNode.text) {
+  if (oldNode.type !== newNode.type || oldNode.tag !== newNode.tag) {
+    patches.push({ type: PATCH_TYPES.REPLACE, path, oldNode, newNode });
+    return patches;
+  }
+
+  if (oldNode.type === "text" && newNode.type === "text") {
+    if (oldNode.text !== newNode.text) {
       patches.push({
         type: PATCH_TYPES.TEXT,
         path,
-        value: newVNode.text,
+        oldText: oldNode.text,
+        newText: newNode.text,
       });
     }
-
-    return;
+    return patches;
   }
 
-  if (oldVNode.type !== newVNode.type) {
-    patches.push({
-      type: PATCH_TYPES.REPLACE,
-      path,
-      node: newVNode,
-    });
-    return;
-  }
-
-  diffProps(oldVNode.props, newVNode.props, path, patches);
-
-  const maxLength = Math.max(
-    oldVNode.children?.length ?? 0,
-    newVNode.children?.length ?? 0,
-  );
-
-  for (let index = 0; index < maxLength; index += 1) {
-    walkDiff(
-      oldVNode.children?.[index],
-      newVNode.children?.[index],
-      [...path, index],
-      patches,
-    );
-  }
-}
-
-export function diff(oldVNode, newVNode) {
-  const patches = [];
-  walkDiff(oldVNode, newVNode, [], patches);
+  diffAttrs(oldNode.attrs, newNode.attrs, path, patches);
+  diffChildren(oldNode.children || [], newNode.children || [], path, patches);
   return patches;
 }
 
-function getNodeByPath(rootNode, path) {
-  if (path.length === 0) {
-    return rootNode;
-  }
+export function diff(oldNode, newNode, path = "0", patches = []) {
+  normalizeVNodePaths(oldNode, path, 0);
+  normalizeVNodePaths(newNode, path, 0);
+  return diffInternal(oldNode, newNode, path, patches);
+}
 
-  let current = rootNode;
-  for (const index of path) {
-    current = current?.childNodes?.[index];
-    if (!current) {
+/* -------------------------------------------------------------------------- */
+/* 7. patch engine                                                             */
+/* -------------------------------------------------------------------------- */
+
+function getDomNodeByPath(root, path) {
+  if (path === "0") {
+    return root;
+  }
+  let current = root;
+  const segments = pathToSegments(path);
+  for (const segment of segments) {
+    const comparableChildren = getComparableChildNodes(current);
+    if (!current || !comparableChildren[segment]) {
       return null;
     }
+    current = comparableChildren[segment];
   }
-
   return current;
 }
 
-export function applyPatches(rootNode, patches) {
-  let currentRoot = rootNode;
+function applyCreatePatch(root, patch) {
+  const parent = getDomNodeByPath(root, patch.parentPath);
+  if (!parent) {
+    return;
+  }
+  const comparableChildren = getComparableChildNodes(parent);
+  const referenceNode = comparableChildren[patch.index] || null;
+  parent.insertBefore(createDOMFromVNode(patch.node), referenceNode);
+}
 
-  const removePatches = patches
-    .filter((patch) => patch.type === PATCH_TYPES.REMOVE)
-    .sort((left, right) => right.path.length - left.path.length);
+function applyRemovePatch(root, patch) {
+  const target = getDomNodeByPath(root, patch.path);
+  if (target && target.parentNode) {
+    target.parentNode.removeChild(target);
+  }
+}
 
-  const createPatches = patches
-    .filter((patch) => patch.type === PATCH_TYPES.CREATE)
-    .sort((left, right) => left.parentPath.length - right.parentPath.length);
+function applyReplacePatch(root, patch) {
+  const target = getDomNodeByPath(root, patch.path);
+  if (!target) {
+    return;
+  }
+  const replacement = createDOMFromVNode(patch.newNode);
+  if (target === root) {
+    target.replaceWith(replacement);
+    return replacement;
+  }
+  if (target.parentNode) {
+    target.parentNode.replaceChild(replacement, target);
+  }
+  return null;
+}
 
-  const otherPatches = patches.filter(
-    (patch) =>
-      patch.type !== PATCH_TYPES.REMOVE && patch.type !== PATCH_TYPES.CREATE,
-  );
+function applyTextPatch(root, patch) {
+  const target = getDomNodeByPath(root, patch.path);
+  if (target) {
+    target.textContent = patch.newText;
+  }
+}
 
-  for (const patch of removePatches) {
-    const target = getNodeByPath(currentRoot, patch.path);
-    target?.parentNode?.removeChild(target);
+function applyAttrSetPatch(root, patch) {
+  const target = getDomNodeByPath(root, patch.path);
+  if (!target || target.nodeType !== NODE_TYPE.ELEMENT) {
+    return;
+  }
+  setDomAttribute(target, patch.name, patch.value);
+}
+
+function applyAttrRemovePatch(root, patch) {
+  const target = getDomNodeByPath(root, patch.path);
+  if (target && target.nodeType === NODE_TYPE.ELEMENT) {
+    removeDomAttribute(target, patch.name);
+  }
+}
+
+function applyReorderPatch(root, patch, newVNodeRoot) {
+  const parent = getDomNodeByPath(root, patch.path);
+  const parentVNode = findVNodeByPath(newVNodeRoot, patch.path);
+  if (!parent || !parentVNode) {
+    return;
   }
 
-  for (const patch of otherPatches) {
-    const target = getNodeByPath(currentRoot, patch.path);
+  const existingChildren = getComparableChildNodes(parent);
+  const existingByKey = new Map();
+  existingChildren.forEach((child, index) => {
+    existingByKey.set(getDomKey(child, index), child);
+  });
 
+  const fragment = document.createDocumentFragment();
+  (parentVNode.children || []).forEach((childVNode, index) => {
+    const lookupKey = childVNode.key || `__index_${index}`;
+    const existingNode = existingByKey.get(lookupKey);
+    fragment.appendChild(existingNode || createDOMFromVNode(childVNode));
+  });
+
+  parent.replaceChildren(fragment);
+}
+
+/*
+  이 함수의 역할:
+  patch 배열을 실제 DOM에 순서 있게 적용한다.
+*/
+export function applyPatches(root, patches, newVNodeRoot = null) {
+  let nextRoot = root;
+  const removePatches = patches
+    .filter((patch) => patch.type === PATCH_TYPES.REMOVE)
+    .sort((a, b) => getPathDepth(b.path) - getPathDepth(a.path));
+  const createPatches = patches
+    .filter((patch) => patch.type === PATCH_TYPES.CREATE)
+    .sort((a, b) => getPathDepth(a.path) - getPathDepth(b.path));
+  const updatePatches = patches.filter(
+    (patch) =>
+      ![
+        PATCH_TYPES.CREATE,
+        PATCH_TYPES.REMOVE,
+        PATCH_TYPES.REORDER_CHILDREN,
+      ].includes(patch.type),
+  );
+  const reorderPatches = patches.filter(
+    (patch) => patch.type === PATCH_TYPES.REORDER_CHILDREN,
+  );
+
+  removePatches.forEach((patch) => applyRemovePatch(nextRoot, patch));
+  updatePatches.forEach((patch) => {
     switch (patch.type) {
       case PATCH_TYPES.REPLACE: {
-        const nextNode = createDOMFromVNode(patch.node);
-        if (patch.path.length === 0) {
-          currentRoot.replaceWith(nextNode);
-          currentRoot = nextNode;
-        } else {
-          target?.parentNode?.replaceChild(nextNode, target);
+        const replacedRoot = applyReplacePatch(nextRoot, patch);
+        if (replacedRoot) {
+          nextRoot = replacedRoot;
         }
         break;
       }
       case PATCH_TYPES.TEXT:
-        if (target) {
-          target.textContent = patch.value;
-        }
+        applyTextPatch(nextRoot, patch);
         break;
-      case PATCH_TYPES.SET_PROP:
-        if (target?.nodeType === Node.ELEMENT_NODE) {
-          setDomProp(target, patch.name, patch.value);
-        }
+      case PATCH_TYPES.ATTR_SET:
+        applyAttrSetPatch(nextRoot, patch);
         break;
-      case PATCH_TYPES.REMOVE_PROP:
-        if (target?.nodeType === Node.ELEMENT_NODE) {
-          removeDomProp(target, patch.name);
-        }
+      case PATCH_TYPES.ATTR_REMOVE:
+        applyAttrRemovePatch(nextRoot, patch);
         break;
       default:
         break;
     }
-  }
+  });
+  createPatches.forEach((patch) => applyCreatePatch(nextRoot, patch));
+  reorderPatches.forEach((patch) =>
+    applyReorderPatch(nextRoot, patch, newVNodeRoot),
+  );
 
-  for (const patch of createPatches) {
-    const parent = getNodeByPath(currentRoot, patch.parentPath);
-    const nextNode = createDOMFromVNode(patch.node);
-    const referenceNode = parent?.childNodes?.[patch.index] ?? null;
-    parent?.insertBefore(nextNode, referenceNode);
-  }
+  return nextRoot;
+}
 
-  return currentRoot;
+if (typeof window !== "undefined") {
+  Object.assign(window, {
+    NODE_TYPE,
+    PATCH_TYPES,
+    createRootContainer,
+    createElementVNode,
+    createTextVNode,
+    domNodeToVNode,
+    domToVNode,
+    createDOMFromVNode,
+    diff,
+    applyPatches,
+    isComparableDomNode,
+    getComparableChildNodes,
+    getDomKey,
+    serializeHTML,
+    safelyParseHTML,
+    renderHTMLIntoTarget,
+    countNodes,
+    calculateMaxDepth,
+    getNodeDescriptor,
+    getReadableNodeSummary,
+    findVNodeByPath,
+    sanitizeText,
+    h,
+  });
 }

@@ -35,6 +35,10 @@ test("app flow reacts to clicks and timer effect", async () => {
   const { mountApp } = await import("../src/app.js");
   const app = mountApp(document.querySelector("#app"));
 
+  assert.match(document.body.textContent, /카운트 1/);
+  assert.match(document.body.textContent, /카운트 2/);
+  assert.match(document.body.textContent, /시계/);
+
   click(findButtonByText("+1"));
   await Promise.resolve();
 
@@ -54,9 +58,6 @@ test("app flow reacts to clicks and timer effect", async () => {
 
   click(findButtonByText("Pause"));
   await Promise.resolve();
-
-  assert.match(document.body.textContent, /총 카운트: 2/);
-  assert.match(document.body.textContent, /속도:/);
 
   app.unmount();
   dom.window.close();

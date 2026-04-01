@@ -55,7 +55,7 @@ export class FunctionComponent {
     const nextVNode = this.#render();
     const patches = diff(this.vnode, nextVNode);
 
-    this.dom = applyPatches(this.dom, patches);
+    this.dom = applyPatches(this.dom, patches, nextVNode);
     if (this.container.firstChild !== this.dom) {
       this.container.replaceChildren(this.dom);
     }

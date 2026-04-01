@@ -12,13 +12,16 @@ function formatSeconds(totalSeconds) {
   return `${minutes}:${seconds}`;
 }
 
-function CounterCard({ title, value, total, onDecrease, onIncrease, onReset }) {
+function CounterCard({ title, value, onDecrease, onIncrease, onReset }) {
   return h(
     "article",
-    { className: "panel counter-card" },
+    { className: "panel dial-card counter-card" },
     h("h3", null, title),
-    h("p", { className: "counter-value" }, value),
-    h("p", { className: "muted" }, `두 카운터 합계: ${total}`),
+    h(
+      "div",
+      { className: "counter-core" },
+      h("p", { className: "counter-value" }, value),
+    ),
     h(
       "div",
       { className: "button-row" },
@@ -29,18 +32,33 @@ function CounterCard({ title, value, total, onDecrease, onIncrease, onReset }) {
   );
 }
 
-function TimerCard({ running, seconds, total, paceLabel, onToggle, onReset }) {
+function TimerCard({ running, seconds, onToggle, onReset }) {
+  const secondAngle = (seconds % 60) * 6;
+  const minuteAngle = ((seconds / 60) % 60) * 6;
+
   return h(
     "article",
-    { className: "panel timer-card" },
-    h("h3", null, "생명주기 타이머"),
-    h("p", { className: "timer-value" }, formatSeconds(seconds)),
-    h("p", { className: "muted" }, running ? "useEffect interval 실행 중" : "cleanup 완료"),
+    { className: "panel dial-card timer-card" },
+    h("h3", null, "시계"),
     h(
       "div",
-      { className: "timer-summary" },
-      h("span", null, `총 카운트: ${total}`),
-      h("span", null, `속도: ${paceLabel}`),
+      { className: "clock-face" },
+      ...Array.from({ length: 12 }, (_, index) =>
+        h("span", {
+          className: "clock-tick",
+          style: `transform: translateX(-50%) rotate(${index * 30}deg);`,
+        }),
+      ),
+      h("span", {
+        className: "clock-hand minute-hand",
+        style: `transform: translateX(-50%) rotate(${minuteAngle}deg);`,
+      }),
+      h("span", {
+        className: "clock-hand second-hand",
+        style: `transform: translateX(-50%) rotate(${secondAngle}deg);`,
+      }),
+      h("span", { className: "clock-center-dot" }),
+      h("p", { className: "timer-value" }, formatSeconds(seconds)),
     ),
     h(
       "div",
@@ -55,7 +73,7 @@ function TimerCard({ running, seconds, total, paceLabel, onToggle, onReset }) {
   );
 }
 
-function App(_props, runtime) {
+function App() {
   const [scores, setScores] = useState({ alpha: 0, beta: 0 });
   const [running, setRunning] = useState(false);
   const [seconds, setSeconds] = useState(0);
@@ -110,30 +128,17 @@ function App(_props, runtime) {
     { className: "page-shell" },
     h(
       "section",
-      { className: "hero panel" },
-      h("span", { className: "hero-badge" }, "Week 5 Custom React Core"),
-      h("h1", null, "카운터 2개와 타이머로 보는 커스텀 React 코어"),
-      h(
-        "p",
-        { className: "hero-copy" },
-        "상태는 루트에서만 관리하고, 자식 컴포넌트는 props만 받아 렌더링합니다.",
-      ),
-    ),
-    h(
-      "section",
       { className: "content-grid" },
       CounterCard({
-        title: "Alpha Counter",
+        title: "카운트 1",
         value: scores.alpha,
-        total: summary.totalScore,
         onDecrease: () => changeScore("alpha", -1),
         onIncrease: () => changeScore("alpha", 1),
         onReset: () => resetScore("alpha"),
       }),
       CounterCard({
-        title: "Beta Counter",
+        title: "카운트 2",
         value: scores.beta,
-        total: summary.totalScore,
         onDecrease: () => changeScore("beta", -1),
         onIncrease: () => changeScore("beta", 1),
         onReset: () => resetScore("beta"),
@@ -141,13 +146,10 @@ function App(_props, runtime) {
       TimerCard({
         running,
         seconds,
-        total: summary.totalScore,
-        paceLabel: summary.paceLabel,
         onToggle: () => setRunning((current) => !current),
         onReset: resetTimer,
       }),
     ),
-    h("p", { className: "footnote" }, `현재 render 횟수: ${runtime.renderCount}`),
   );
 }
 

@@ -42,6 +42,7 @@ export function StopwatchCard({
 }) {
   const elapsedTimeText = formatStopwatch(elapsedMs);
   const latestLapText = laps.length ? formatStopwatch(latestLapMs) : "00:00.00";
+  const displayedLaps = [...laps].reverse();
 
   return h(
     "section",
@@ -60,7 +61,7 @@ export function StopwatchCard({
         ? h(
             "div",
             { className: "laps-body" },
-            ...laps.map((lap, index) =>
+            ...displayedLaps.map((lap, index) =>
               h(
                 "div",
                 {

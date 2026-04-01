@@ -36,9 +36,10 @@ export function RootApp() {
   }, [running, startedAtMs]);
 
   const summary = useMemo(() => {
-    const latestLapTotal = laps.length ? laps[0].totalMs : 0;
-    const latestLapMs = laps.length ? laps[0].lapMs : 0;
-    const comparableLaps = laps.slice(1);
+    const latestLap = laps.length ? laps[laps.length - 1] : null;
+    const latestLapTotal = latestLap ? latestLap.totalMs : 0;
+    const latestLapMs = latestLap ? latestLap.lapMs : 0;
+    const comparableLaps = laps.slice(0, -1);
 
     return {
       latestLapTotal,
@@ -86,7 +87,7 @@ export function RootApp() {
       return;
     }
 
-    const previousTotal = laps.length ? laps[0].totalMs : 0;
+    const previousTotal = laps.length ? laps[laps.length - 1].totalMs : 0;
     const nextLap = {
       id: `${laps.length + 1}-${elapsedMs}`,
       number: laps.length + 1,
@@ -94,7 +95,7 @@ export function RootApp() {
       totalMs: elapsedMs,
     };
 
-    setLaps((current) => [nextLap, ...current]);
+    setLaps((current) => [...current, nextLap]);
   }
 
   function handleThemeToggle() {

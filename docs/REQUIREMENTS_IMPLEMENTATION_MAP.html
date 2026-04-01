@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>과제 요구사항 · 구현 매핑 문서</title>
+    <style>
+      :root {
+        --bg: #050608;
+        --panel: rgba(14, 16, 20, 0.88);
+        --panel-strong: rgba(18, 20, 25, 0.96);
+        --border: rgba(255, 255, 255, 0.08);
+        --text: #f5f7fb;
+        --muted: #9ea7b7;
+        --accent: #ff735c;
+        --blue: #6d87ff;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        padding: 40px 20px 96px;
+        color: var(--text);
+        font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(255, 115, 92, 0.14), transparent 26%),
+          radial-gradient(circle at 20% 20%, rgba(109, 135, 255, 0.1), transparent 22%),
+          linear-gradient(180deg, #090b10, var(--bg));
+      }
+
+      main {
+        width: min(1280px, 100%);
+        margin: 0 auto;
+      }
+
+      .hero { margin-bottom: 28px; }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        line-height: 1.05;
+      }
+
+      .hero p {
+        max-width: 920px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.75;
+      }
+
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .grid {
+        display: grid;
+        gap: 20px;
+      }
+
+      .subgrid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        font-size: 1.2rem;
+      }
+
+      pre.mermaid {
+        margin: 0;
+        overflow: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+      }
+
+      th, td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+        vertical-align: top;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+
+      th {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .notes {
+        margin-top: 14px;
+        color: var(--muted);
+        line-height: 1.72;
+        font-size: 0.96rem;
+      }
+
+      .notes p { margin: 0 0 10px; }
+      .notes ul { margin: 0; padding-left: 18px; }
+
+      .quote {
+        padding: 16px 18px;
+        border-radius: 18px;
+        background: var(--panel-strong);
+        border: 1px solid var(--border);
+        color: var(--text);
+        line-height: 1.75;
+      }
+
+      .highlight { color: var(--accent); }
+      .highlight-blue { color: var(--blue); }
+    </style>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        themeVariables: {
+          background: "#0f1116",
+          primaryColor: "#171b22",
+          primaryTextColor: "#f5f7fb",
+          primaryBorderColor: "#4a5568",
+          lineColor: "#8b97ab",
+          secondaryColor: "#151922",
+          tertiaryColor: "#101319",
+          fontFamily: "Segoe UI, Apple SD Gothic Neo, sans-serif"
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <main>
+      <div class="hero">
+        <div class="eyebrow">Requirements and Implementation Map</div>
+        <h1>과제 요구사항 · 구현 매핑 문서</h1>
+        <p>
+          이 문서는 현재 저장소가 과제 요구사항을 어떻게 충족하는지, 그리고
+          <span class="highlight">Week 3 Virtual DOM을 어떻게 가져와 현재 구조로 확장했는지</span>
+          를 한 번에 설명하기 위한 발표용 자료입니다.
+        </p>
+        <div class="chip-row">
+          <div class="chip">Requirement Checklist</div>
+          <div class="chip">Week 3 VDOM Reuse</div>
+          <div class="chip">Hooks Runtime Added</div>
+          <div class="chip">Stopwatch Demo</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <section>
+          <h2>1. 한 장 요약</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["Week 3 Virtual DOM 엔진"] --> B["현재 저장소의 VDOM 모듈 구조"]
+    B --> C["FunctionComponent 런타임 추가"]
+    C --> D["useState / useEffect / useMemo 추가"]
+    D --> E["루트 상태 기반 스톱워치 앱"]
+    E --> F["테스트 + 시각화 문서"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>2. 과제 요구사항 체크맵</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["과제 요구사항"] --> B["함수형 컴포넌트"]
+    A --> C["FunctionComponent 클래스"]
+    A --> D["State는 루트에서만 관리"]
+    A --> E["자식은 props-only stateless"]
+    A --> F["useState / useEffect / useMemo"]
+    A --> G["Virtual DOM + Diff + Patch"]
+    A --> H["브라우저에서 동작하는 시연 페이지"]
+    A --> I["단위 테스트 + 기능 테스트"]
+    A --> J["Week 3 VDOM 활용"]
+
+    B --> B1["RootApp / StopwatchCard"]
+    C --> C1["hooks 배열 / mount / update / unmount / scheduleUpdate"]
+    D --> D1["running / elapsedMs / startedAtMs / laps"]
+    E --> E1["StopwatchCard(props)"]
+    F --> F1["hooks.js"]
+    G --> G1["vdom/*"]
+    H --> H1["스톱워치 + 구간 기록"]
+    I --> I1["tests/*"]
+    J --> J1["이전 core/vdom.js 구조를 기반으로 모듈화"]
+          </pre>
+        </section>
+
+        <section>
+          <h2>3. 요구사항별 구현 위치</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>요구사항</th>
+                <th>현재 구현</th>
+                <th>위치</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>함수형 컴포넌트</td><td><code>RootApp</code>, <code>StopwatchCard</code></td><td><code>src/RootApp.js</code>, <code>src/components/StopwatchCard.js</code></td></tr>
+              <tr><td><code>FunctionComponent</code> 클래스</td><td><code>hooks[]</code>, <code>mount</code>, <code>update</code>, <code>unmount</code>, <code>scheduleUpdate</code></td><td><code>src/core/function-component/FunctionComponent.js</code></td></tr>
+              <tr><td>루트 상태 관리</td><td><code>running</code>, <code>elapsedMs</code>, <code>startedAtMs</code>, <code>laps</code></td><td><code>src/RootApp.js</code></td></tr>
+              <tr><td>stateless 자식</td><td>props-only 렌더링</td><td><code>src/components/StopwatchCard.js</code></td></tr>
+              <tr><td><code>useState</code>, <code>useEffect</code>, <code>useMemo</code></td><td>훅 구현</td><td><code>src/core/function-component/hooks.js</code></td></tr>
+              <tr><td>VDOM 생성</td><td><code>h</code>, <code>createElementVNode</code>, <code>createTextVNode</code></td><td><code>src/core/vdom/vnode.js</code></td></tr>
+              <tr><td>Diff / Patch</td><td><code>diff</code>, <code>diffChildren</code>, <code>applyPatches</code></td><td><code>src/core/vdom/diff.js</code>, <code>src/core/vdom/patch.js</code></td></tr>
+              <tr><td>브라우저 시연</td><td>스톱워치 + 구간 기록</td><td><code>src/app.js</code>, <code>src/RootApp.js</code></td></tr>
+              <tr><td>테스트</td><td>단위 테스트 + 기능 테스트</td><td><code>tests/*</code></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <div class="subgrid">
+          <section>
+            <h2>4. "Week 3 VDOM을 가져와 확장했다"는 말의 정확한 의미</h2>
+            <div class="quote">
+              이전 프로젝트의 VDOM 핵심 구조를 기반으로 현재 저장소의 VDOM 모듈을 재구성했고,
+              그 위에 FunctionComponent와 Hooks 런타임을 새로 얹어 React 형태로 확장했습니다.
+            </div>
+            <div class="notes">
+              <ul>
+                <li>그대로 복붙만 한 것은 아닙니다.</li>
+                <li>아예 처음부터 새로 만든 것도 아닙니다.</li>
+                <li>이전 VDOM 코어의 구조와 알고리즘을 가져와 현재 구조에 맞게 모듈화하고 확장한 것입니다.</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>5. 이전 프로젝트에서 가져온 것과 새로 추가한 것</h2>
+            <pre class="mermaid">
+flowchart LR
+    A["이전 Week 3 VDOM"] --> B["가져온 핵심"]
+    B --> B1["VNode 구조"]
+    B --> B2["domNodeToVNode / domToVNode"]
+    B --> B3["diff / diffChildren"]
+    B --> B4["applyPatches"]
+    B --> B5["path / depth / key 기반 처리"]
+
+    C["이번 Week 5에서 새로 추가"] --> D["FunctionComponent 런타임"]
+    D --> D1["hooks[] 저장소"]
+    D --> D2["mount / update / unmount"]
+    D --> D3["scheduleUpdate + queueMicrotask batching"]
+    D --> D4["currentInstance / hookIndex"]
+    D --> D5["useState / useEffect / useMemo"]
+    D --> D6["루트 상태 기반 스톱워치 앱"]
+            </pre>
+          </section>
+        </div>
+
+        <div class="subgrid">
+          <section>
+            <h2>6. 구조 관점에서의 변환</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["이전 프로젝트"] --> B["core/vdom.js 하나의 파일"]
+    B --> C["상수 / VNode / DOM / diff / patch / tree 탐색 공존"]
+    C --> D["window 전역 노출"]
+            </pre>
+          </section>
+
+          <section>
+            <h2>7. 현재 프로젝트 구조</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["src/core/vdom.js"] --> B["vdom/vnode.js"]
+    A --> C["vdom/dom.js"]
+    A --> D["vdom/diff.js"]
+    A --> E["vdom/patch.js"]
+    A --> F["vdom/tree.js"]
+    A --> G["vdom/helpers.js"]
+    A --> H["vdom/constants.js"]
+
+    I["src/core/function-component.js"] --> J["FunctionComponent.js"]
+    I --> K["hooks.js"]
+    I --> L["runtime.js"]
+    I --> M["utils.js"]
+            </pre>
+          </section>
+        </div>
+
+        <section>
+          <h2>8. 실제 구현 흐름</h2>
+          <pre class="mermaid">
+flowchart TD
+    A["사용자 입력"] --> B["RootApp 상태 변경"]
+    B --> C["FunctionComponent.scheduleUpdate()"]
+    C --> D["queueMicrotask(update)"]
+    D --> E["RootApp 재실행"]
+    E --> F["StopwatchCard props 계산"]
+    F --> G["새 VDOM 생성"]
+    G --> H["이전 VDOM과 diff"]
+    H --> I["patch 목록 생성"]
+    I --> J["실제 DOM 최소 반영"]
+          </pre>
+        </section>
+
+        <div class="subgrid">
+          <section>
+            <h2>9. 발표에서 이렇게 말하면 안전함</h2>
+            <div class="quote">
+              Week 3에서 만든 Virtual DOM 엔진의 핵심 구조와 diff/patch 흐름을 기반으로 현재 저장소의
+              VDOM 모듈을 재구성했습니다. 그리고 이번 과제에서는 그 위에
+              <code>FunctionComponent</code>, <code>useState</code>, <code>useEffect</code>, <code>useMemo</code>,
+              microtask batching을 추가해 React 형태의 런타임으로 확장했습니다.
+            </div>
+          </section>
+
+          <section>
+            <h2>10. 시연 앱이 과제 요구사항을 어떻게 보여 주는가</h2>
+            <pre class="mermaid">
+flowchart TD
+    A["시연 요소"] --> B["시작 / 정지"]
+    A --> C["구간 기록"]
+    A --> D["초기화"]
+    A --> E["랩 목록 강조"]
+
+    B --> B1["useState + useEffect(interval)"]
+    C --> C1["루트 상태 배열 갱신 + 리스트 diff"]
+    D --> D1["여러 상태 초기화 + batching"]
+    E --> E1["useMemo로 fastest / slowest 계산"]
+            </pre>
+          </section>
+        </div>
+
+        <section>
+          <h2>11. 남는 한계도 같이 말해야 함</h2>
+          <div class="notes">
+            <ul>
+              <li>상태 하나만 바뀌어도 <code>RootApp()</code> 전체가 다시 실행됩니다.</li>
+              <li>모든 컴포넌트가 독립적인 Fiber를 가지지는 않습니다.</li>
+              <li>diff는 실용적인 heuristic 비교이고, 항상 최소 편집 비용을 찾는 것은 아닙니다.</li>
+              <li><code>StopwatchCard</code>는 stateless로 설계해 과제 제약을 맞춘 구조입니다.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+  </html>

@@ -1,5 +1,5 @@
 import { NODE_TYPE, PATCH_TYPES } from "./constants.js";
-import { getPathDepth, pathToSegments } from "./helpers.js";
+import { buildKey, getPathDepth, pathToSegments } from "./helpers.js";
 import {
   createDOMFromVNode,
   getComparableChildNodes,
@@ -7,7 +7,6 @@ import {
   removeDomAttribute,
   setDomAttribute,
 } from "./dom.js";
-import { findVNodeByPath } from "./tree.js";
 
 /**
  * 경로에 해당하는 실제 DOM 노드를 찾습니다.
@@ -33,6 +32,36 @@ function getDomNodeByPath(root, path) {
   }
 
   return current;
+}
+
+function getVNodeByPath(root, path) {
+  if (!root) {
+    return null;
+  }
+
+  if (path === "0") {
+    return root;
+  }
+
+  let current = root;
+  const segments = pathToSegments(path);
+
+  for (const segment of segments) {
+    if (!current?.children?.[segment]) {
+      return null;
+    }
+    current = current.children[segment];
+  }
+
+  return current;
+}
+
+function getVNodeLookupKey(node, fallbackKey) {
+  if (!node || node.type === "text") {
+    return fallbackKey;
+  }
+
+  return buildKey(node.attrs, fallbackKey);
 }
 
 /**
@@ -147,7 +176,7 @@ function applyAttrRemovePatch(root, patch) {
  */
 function applyReorderPatch(root, patch, newVNodeRoot) {
   const parent = getDomNodeByPath(root, patch.path);
-  const parentVNode = findVNodeByPath(newVNodeRoot, patch.path);
+  const parentVNode = getVNodeByPath(newVNodeRoot, patch.path);
   if (!parent || !parentVNode) {
     return;
   }
@@ -160,7 +189,7 @@ function applyReorderPatch(root, patch, newVNodeRoot) {
 
   const fragment = document.createDocumentFragment();
   (parentVNode.children || []).forEach((childVNode, index) => {
-    const lookupKey = childVNode.key || `__index_${index}`;
+    const lookupKey = getVNodeLookupKey(childVNode, `__index_${index}`);
     const existingNode = existingByKey.get(lookupKey);
     fragment.appendChild(existingNode || createDOMFromVNode(childVNode));
   });
